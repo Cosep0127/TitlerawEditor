@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TitleRaw 编辑器</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <span class="logo">⌘</span>
+    <h1>TitleRaw 编辑器</h1>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- 目标玩家 + 标题位置 -->
+  <section class="card">
+    <div class="card-grid-2">
+      <div>
+        <div class="card-label">目标玩家</div>
+        <div class="player-row">
+          <input type="text" id="playerInput" value="@a" spellcheck="false" placeholder="@a、@p、玩家名...">
+          <div class="quick-selectors">
+            <button class="chip" data-value="@a">@a</button>
+            <button class="chip" data-value="@p">@p</button>
+            <button class="chip" data-value="@r">@r</button>
+            <button class="chip" data-value="@e[type=player]">@e[type=player]</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card-label">标题位置</div>
+        <div class="segmented" id="typeSelector">
+          <button class="segmented-item active" data-type="title">标题</button>
+          <button class="segmented-item" data-type="subtitle">副标题</button>
+          <button class="segmented-item" data-type="actionbar">操作栏</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 命令导入 -->
+  <section class="card collapsible-card" id="importCard">
+    <div class="collapsible-trigger">
+      <span class="card-label">命令导入</span>
+      <span class="collapse-icon">▶</span>
+    </div>
+    <div class="collapsible-body">
+      <div class="import-body">
+        <textarea id="importInput" placeholder="粘贴完整的 /titleraw 命令或仅 JSON 部分，例如：&#10;/titleraw @a title {\"rawtext\":[{\"text\":\"Hello\"}]}"></textarea>
+        <div class="import-actions">
+          <button id="importBtn" class="btn-add">解析导入</button>
+        </div>
+        <div id="importError" class="import-error"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 颜色与格式参考 -->
+  <section class="card collapsible-card" id="refCard">
+    <div class="collapsible-trigger">
+      <span class="card-label">颜色与格式参考（点击复制编码）</span>
+      <span class="collapse-icon">▶</span>
+    </div>
+    <div class="collapsible-body">
+      <div class="ref-section">
+        <div class="ref-subtitle">颜色（29 种）</div>
+        <div class="color-grid" id="refColorGrid"></div>
+      </div>
+      <div class="ref-section">
+        <div class="ref-subtitle">格式</div>
+        <div class="format-row" id="refFormatRow">
+          <button class="format-btn ref-format-btn" data-code="§l">B <span class="code-tag">§l</span></button>
+          <button class="format-btn ref-format-btn" data-code="§o">I <span class="code-tag">§o</span></button>
+          <button class="format-btn ref-format-btn" data-code="§k">K <span class="code-tag">§k</span></button>
+          <button class="format-btn ref-format-btn" data-code="§r">R <span class="code-tag">§r</span></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 组件列表 -->
+  <section class="card">
+    <div class="section-header">
+      <div class="card-label">组件列表</div>
+      <div class="section-header-actions">
+        <button id="clearAllBtn" class="btn-danger">清空</button>
+        <button id="addComponentBtn" class="btn-add">+ 添加组件</button>
+      </div>
+    </div>
+    <div id="componentsList"></div>
+  </section>
+
+  <!-- 视觉预览 -->
+  <section class="card visual-card">
+    <div class="card-label">视觉预览</div>
+    <div class="visual-stage" id="visualStage">
+      <div class="v-title" id="vTitle"></div>
+      <div class="v-subtitle" id="vSubtitle"></div>
+      <div class="v-actionbar" id="vActionbar"></div>
+    </div>
+  </section>
+
+  <!-- 命令预览 -->
+  <section class="card cmd-card">
+    <div class="card-label">命令预览</div>
+    <div class="cmd-toolbar">
+      <div class="cmd-tabs">
+        <button class="cmd-tab active" data-mode="format">格式化</button>
+        <button class="cmd-tab" data-mode="minify">压缩</button>
+      </div>
+      <button id="copyBtn" class="btn-icon" title="复制命令">📋</button>
+    </div>
+    <div class="cmd-box">
+      <code id="commandPreview">/titleraw @a title {"rawtext":[]}</code>
+    </div>
+  </section>
+
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>
