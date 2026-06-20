@@ -12,6 +12,11 @@
   <div class="header-inner">
     <span class="logo">⌘</span>
     <h1>/titleraw 可视化编辑器</h1>
+    <div style="display:flex;gap:2px;margin-left:8px;">
+      <button class="history-btn" id="undoBtn" title="撤销" disabled>↩</button>
+      <button class="history-btn" id="redoBtn" title="重做" disabled>↪</button>
+    </div>
+    <button class="theme-toggle" id="themeToggle" title="切换主题">☀</button>
   </div>
 </header>
 
@@ -35,6 +40,7 @@
       <div>
         <div class="card-label">显示位置</div>
         <div class="segmented" id="typeSelector">
+          <div class="seg-indicator" id="typeIndicator"></div>
           <button class="segmented-item active" data-type="title">title</button>
           <button class="segmented-item" data-type="subtitle">subtitle</button>
           <button class="segmented-item" data-type="actionbar">actionbar</button>
@@ -43,45 +49,11 @@
     </div>
   </section>
 
-  <!-- 命令导入 -->
-  <section class="card collapsible-card" id="importCard">
-    <div class="collapsible-trigger">
-      <span class="card-label">命令导入</span>
-      <span class="collapse-icon">▶</span>
-    </div>
-    <div class="collapsible-body">
-      <div class="import-body">
-        <textarea id="importInput" placeholder='粘贴完整 /titleraw 命令（/ 可不加），自动解析 JSON 部分。也可只粘贴 JSON。'></textarea>
-        <div class="import-actions">
-          <button id="importBtn" class="btn-add">解析导入</button>
-        </div>
-        <div id="importError" class="import-error"></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 颜色与格式参考 -->
-  <section class="card collapsible-card" id="refCard">
-    <div class="collapsible-trigger">
-      <span class="card-label">格式化代码表</span>
-      <span class="collapse-icon">▶</span>
-    </div>
-    <div class="collapsible-body">
-      <div class="ref-section">
-        <div class="ref-subtitle">颜色（29 种）</div>
-        <div class="color-grid" id="refColorGrid"></div>
-      </div>
-      <div class="ref-section">
-        <div class="ref-subtitle">格式</div>
-        <div class="format-row" id="refFormatRow">
-          <button class="format-btn ref-format-btn" data-code="§l">粗体 <span class="code-tag">§l</span></button>
-          <button class="format-btn ref-format-btn" data-code="§o">斜体 <span class="code-tag">§o</span></button>
-          <button class="format-btn ref-format-btn" data-code="§k">随机 <span class="code-tag">§k</span></button>
-          <button class="format-btn ref-format-btn" data-code="§r">重置 <span class="code-tag">§r</span></button>
-        </div>
-      </div>
-    </div>
-  </section>
+  <!-- 操作按钮行 -->
+  <div class="action-trigger-row">
+    <button id="openImportBtn" class="btn-action">导入指令</button>
+    <button id="openRefBtn" class="btn-action">格式化代码表</button>
+  </div>
 
   <!-- 组件列表 -->
   <section class="card">
@@ -109,7 +81,8 @@
   <section class="card cmd-card">
     <div class="card-label">命令</div>
     <div class="cmd-toolbar">
-      <div class="cmd-tabs">
+      <div class="cmd-tabs" id="cmdTabs">
+        <div class="seg-indicator" id="cmdTabIndicator"></div>
         <button class="cmd-tab active" data-mode="format">格式化</button>
         <button class="cmd-tab" data-mode="minify">压缩</button>
       </div>
@@ -121,6 +94,58 @@
   </section>
 
 </main>
+
+<!-- Modal: 导入指令 -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>导入指令</h2>
+      <button class="modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-desc">粘贴 tellraw 或 titleraw 指令（开头可加 / 或不加），自动解析 JSON 部分</p>
+      <textarea id="importInput" rows="6" placeholder='tellraw @a {"rawtext":[...]} 或 /titleraw @a {...}'></textarea>
+      <div id="importError" class="modal-error"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-cancel">取消</button>
+      <button class="modal-confirm" id="importModalConfirm">解析</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: 格式化代码表 -->
+<div class="modal-overlay" id="refModal">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h2>格式化代码表</h2>
+      <button class="modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="ref-section">
+        <div class="ref-subtitle">标准颜色</div>
+        <div class="color-card-grid" id="refColorGrid"></div>
+      </div>
+      <div class="ref-section">
+        <div class="ref-subtitle">材料颜色</div>
+        <div class="color-card-grid" id="refMaterialGrid"></div>
+      </div>
+      <div class="ref-section">
+        <div class="ref-subtitle">其他</div>
+        <div class="color-card-grid" id="refOtherGrid"></div>
+      </div>
+      <div class="ref-section">
+        <div class="ref-subtitle">格式</div>
+        <div class="format-row" id="refFormatRow">
+          <button class="format-btn ref-format-btn" data-code="§l">粗体 <span class="code-tag">§l</span></button>
+          <button class="format-btn ref-format-btn" data-code="§o">斜体 <span class="code-tag">§o</span></button>
+          <button class="format-btn ref-format-btn" data-code="§k">随机 <span class="code-tag">§k</span></button>
+          <button class="format-btn ref-format-btn" data-code="§r">重置 <span class="code-tag">§r</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script src="script.js"></script>
 </body>

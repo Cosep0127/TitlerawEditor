@@ -16,18 +16,18 @@ const COLORS = [
   { code: 'e', name: 'yellow',          display: '黄色',         hex: '#FFFF55' },
   { code: 'f', name: 'white',           display: '白色',         hex: '#FFFFFF' },
   { code: 'g', name: 'minecoin_gold',   display: 'Minecoin金',   hex: '#DDD605' },
-  { code: 'h', name: 'material_quartz',  display: '石英色',      hex: '#E3D4D1' },
-  { code: 'i', name: 'material_iron',    display: '铁锭色',      hex: '#CECACA' },
-  { code: 'j', name: 'material_netherite', display: '下界合金色', hex: '#443A3B' },
-  { code: 'm', name: 'material_redstone',  display: '红石色',    hex: '#971607' },
-  { code: 'n', name: 'material_copper',    display: '铜锭色',    hex: '#B4684D' },
-  { code: 'p', name: 'material_gold',      display: '金锭色',    hex: '#DEB12D' },
-  { code: 'q', name: 'material_emerald',   display: '绿宝石色',  hex: '#11A036' },
-  { code: 's', name: 'material_diamond',   display: '钻石色',    hex: '#2CBAA8' },
-  { code: 't', name: 'material_lapis',     display: '青金石色',  hex: '#21497B' },
-  { code: 'u', name: 'material_amethyst',  display: '紫水晶色',  hex: '#9A5CC6' },
-  { code: 'v', name: 'material_resin',     display: '树脂色',    hex: '#EB7114' },
-  { code: 'w', name: 'party_blue_color',   display: '组队蓝色',  hex: '#8CB3FF' },
+  { code: 'h', name: 'material_quartz',  display: '石英',       hex: '#E3D4D1' },
+  { code: 'i', name: 'material_iron',    display: '铁锭',       hex: '#CECACA' },
+  { code: 'j', name: 'material_netherite', display: '下界合金',  hex: '#443A3B' },
+  { code: 'm', name: 'material_redstone',  display: '红石',     hex: '#971607' },
+  { code: 'n', name: 'material_copper',    display: '铜锭',     hex: '#B4684D' },
+  { code: 'p', name: 'material_gold',      display: '金锭',     hex: '#DEB12D' },
+  { code: 'q', name: 'material_emerald',   display: '绿宝石',   hex: '#11A036' },
+  { code: 's', name: 'material_diamond',   display: '钻石',     hex: '#2CBAA8' },
+  { code: 't', name: 'material_lapis',     display: '青金石',   hex: '#21497B' },
+  { code: 'u', name: 'material_amethyst',  display: '紫水晶',   hex: '#9A5CC6' },
+  { code: 'v', name: 'material_resin',     display: '树脂',     hex: '#EB7114' },
+  { code: 'w', name: 'party_blue_color',   display: '组队蓝',   hex: '#8CB3FF' },
 ];
 
 const FORMAT_COLORS = new Map(COLORS.map(c => [c.code, c]));
@@ -55,13 +55,138 @@ function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 
+function debounce(fn, ms) {
+  let t;
+  return function(...args) { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), ms); };
+}
+
 let cmdMode = 'format';
 
-let state = {
+const state = {
   player: '@a',
   type: 'title',
   components: []
 };
+
+// ─── Undo / Redo ───
+
+const MAX_HISTORY = 100;
+let undoStack = [];
+let redoStack = [];
+
+function snapshot() {
+  return {
+    player: state.player,
+    type: state.type,
+    components: state.components.map(c => ({ ...c }))
+  };
+}
+
+function restore(snap) {
+  state.player = snap.player;
+  state.type = snap.type;
+  state.components = snap.components.map(c => ({ ...c }));
+  playerInput.value = state.player;
+  typeSelector.querySelectorAll('.segmented-item').forEach(b => {
+    b.classList.toggle('active', b.dataset.type === state.type);
+  });
+  updateIndicator('typeSelector');
+}
+
+function pushUndo() {
+  undoStack.push(snapshot());
+  if (undoStack.length > MAX_HISTORY) undoStack.shift();
+  redoStack = [];
+  updateHistoryButtons();
+}
+
+function undo() {
+  if (undoStack.length === 0) return;
+  redoStack.push(snapshot());
+  restore(undoStack.pop());
+  renderComponents();
+  updateHistoryButtons();
+  saveState();
+}
+
+function redo() {
+  if (redoStack.length === 0) return;
+  undoStack.push(snapshot());
+  restore(redoStack.pop());
+  renderComponents();
+  updateHistoryButtons();
+  saveState();
+}
+
+function updateHistoryButtons() {
+  document.getElementById('undoBtn').disabled = undoStack.length === 0;
+  document.getElementById('redoBtn').disabled = redoStack.length === 0;
+}
+
+// ─── localStorage ───
+
+const STORAGE_KEY = 'titleraw-state';
+const THEME_KEY = 'titleraw-theme';
+let saveTimer = null;
+
+function saveState() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+  }, 500);
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (data && Array.isArray(data.components)) {
+      state.player = data.player || '@a';
+      state.type = data.type || 'title';
+      state.components = data.components;
+      return true;
+    }
+  } catch {}
+  return false;
+}
+
+function clearState() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch {}
+}
+
+// ─── Theme ───
+
+const themeToggle = document.getElementById('themeToggle');
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  themeToggle.textContent = theme === 'dark' ? '☾' : '☀';
+  try { localStorage.setItem(THEME_KEY, theme); } catch {}
+}
+
+function initTheme() {
+  const saved = localStorage.getItem(THEME_KEY);
+  if (saved) { applyTheme(saved); return; }
+  applyTheme(prefersDark.matches ? 'dark' : 'light');
+}
+
+themeToggle.addEventListener('click', () => {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  themeToggle.classList.remove('spin');
+  void themeToggle.offsetWidth;
+  themeToggle.classList.add('spin');
+  applyTheme(next);
+});
+
+prefersDark.addEventListener('change', (e) => {
+  if (!localStorage.getItem(THEME_KEY)) {
+    applyTheme(e.matches ? 'dark' : 'light');
+  }
+});
+
+// ─── DOM Refs ───
 
 const playerInput = document.getElementById('playerInput');
 const typeSelector = document.getElementById('typeSelector');
@@ -74,34 +199,29 @@ const vTitle = document.getElementById('vTitle');
 const vSubtitle = document.getElementById('vSubtitle');
 const vActionbar = document.getElementById('vActionbar');
 const refColorGrid = document.getElementById('refColorGrid');
+const refMaterialGrid = document.getElementById('refMaterialGrid');
+const refOtherGrid = document.getElementById('refOtherGrid');
 const refFormatRow = document.getElementById('refFormatRow');
-const importBtn = document.getElementById('importBtn');
 const importInput = document.getElementById('importInput');
 const importError = document.getElementById('importError');
 
 // ─── Collapsible Cards ───
 
-document.querySelectorAll('.collapsible-trigger').forEach(trigger => {
-  trigger.addEventListener('click', () => {
-    const card = trigger.closest('.collapsible-card');
-    card.classList.toggle('open');
-  });
-});
-
 // ─── Reference Card ───
 
+const STANDARD_CODES = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'];
+const MATERIAL_CODES = ['h','i','j','m','n','p','q','s','t','u','v'];
+const OTHER_CODES = ['g','w'];
+
 function buildReferenceCard() {
-  COLORS.forEach(c => {
-    const swatch = document.createElement('div');
-    swatch.className = 'color-swatch';
-    swatch.style.background = c.hex;
-    swatch.title = c.display + ' §' + c.code;
-    swatch.dataset.color = c.name;
-    if (['white', 'material_quartz', 'material_iron'].includes(c.name)) {
-      swatch.style.border = '2px solid #d2d2d7';
-    }
-    swatch.addEventListener('click', () => copyCode('§' + c.code, c.display + ' §' + c.code));
-    refColorGrid.appendChild(swatch);
+  STANDARD_CODES.forEach(code => {
+    refColorGrid.appendChild(createColorCard(code));
+  });
+  MATERIAL_CODES.forEach(code => {
+    refMaterialGrid.appendChild(createColorCard(code));
+  });
+  OTHER_CODES.forEach(code => {
+    refOtherGrid.appendChild(createColorCard(code));
   });
 
   refFormatRow.querySelectorAll('.ref-format-btn').forEach(btn => {
@@ -109,6 +229,39 @@ function buildReferenceCard() {
       copyCode(btn.dataset.code, btn.textContent.trim());
     });
   });
+}
+
+function createColorCard(code) {
+  const color = FORMAT_COLORS.get(code);
+  if (!color) return document.createDocumentFragment();
+
+  const card = document.createElement('div');
+  card.className = 'color-card';
+  card.addEventListener('click', () => copyCode('§' + code, color.display + ' §' + code));
+
+  const swatch = document.createElement('div');
+  swatch.className = 'color-card-swatch';
+  swatch.style.background = color.hex;
+  if (['white', 'material_quartz', 'material_iron'].includes(color.name)) {
+    swatch.style.border = '2px solid var(--border)';
+  }
+
+  const info = document.createElement('div');
+  info.className = 'color-card-info';
+
+  const codeEl = document.createElement('span');
+  codeEl.className = 'color-card-code';
+  codeEl.textContent = '§' + code;
+
+  const nameEl = document.createElement('span');
+  nameEl.className = 'color-card-name';
+  nameEl.textContent = color.display;
+
+  info.appendChild(codeEl);
+  info.appendChild(nameEl);
+  card.appendChild(swatch);
+  card.appendChild(info);
+  return card;
 }
 
 function copyCode(code, label) {
@@ -119,11 +272,6 @@ function copyCode(code, label) {
 
 // ─── Import ───
 
-importBtn.addEventListener('click', doImport);
-importInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && e.ctrlKey) doImport();
-});
-
 function doImport() {
   const raw = importInput.value.trim();
   if (!raw) { importError.textContent = '请粘贴命令或 JSON'; return; }
@@ -133,6 +281,7 @@ function doImport() {
   }
 
   try {
+    pushUndo();
     const result = parseImport(raw);
     if (result.player !== null) {
       state.player = result.player;
@@ -143,11 +292,14 @@ function doImport() {
       typeSelector.querySelectorAll('.segmented-item').forEach(b => {
         b.classList.toggle('active', b.dataset.type === result.type);
       });
+      updateIndicator('typeSelector');
     }
     state.components = result.components.length ? result.components : [{ id: generateId(), type: 'text', text: '', selector: '@p', scoreName: '', scoreObjective: '', translate: '', with: '' }];
     importError.textContent = '';
     renderComponents();
     showToast('导入成功');
+    saveState();
+    closeModal('importModal');
   } catch (e) {
     importError.textContent = e.message;
   }
@@ -160,7 +312,6 @@ function parseImport(text) {
   let player = null;
   let type = null;
 
-  // Try full /titleraw command
   const cmdMatch = text.match(/^\/?titleraw\s+(\S+)\s+(\S+)\s+([\s\S]+)$/i);
   if (cmdMatch) {
     player = cmdMatch[1];
@@ -168,7 +319,6 @@ function parseImport(text) {
     jsonStr = cmdMatch[3].trim();
   }
 
-  // Remove trailing slash if any
   jsonStr = jsonStr.replace(/\/\s*$/, '').trim();
 
   const parsed = JSON.parse(jsonStr);
@@ -213,7 +363,6 @@ function parseImport(text) {
         comp.with = String(item.with);
       }
     } else {
-      // Unknown structure — store as text
       comp.text = JSON.stringify(item);
     }
 
@@ -223,26 +372,83 @@ function parseImport(text) {
   return { player, type, components };
 }
 
-// ─── Render Components ───
+// ─── Render Components (Incremental) ───
 
 function renderComponents() {
-  componentsList.innerHTML = '';
+  const existing = new Map();
+  componentsList.querySelectorAll('.component-card').forEach(el => {
+    existing.set(el.dataset.id, el);
+  });
+
   if (state.components.length === 0) {
+    componentsList.innerHTML = '';
     const empty = document.createElement('div');
     empty.className = 'empty-state';
     empty.textContent = '点击「+ 添加组件」开始编辑';
     componentsList.appendChild(empty);
   } else {
+    const fragment = document.createDocumentFragment();
+    const usedIds = new Set();
+
     state.components.forEach((comp, i) => {
-      componentsList.appendChild(createComponentElement(comp, i));
+      usedIds.add(comp.id);
+      let el = existing.get(comp.id);
+      if (el) {
+        updateComponentElement(el, comp, i);
+      } else {
+        el = createComponentElement(comp, i);
+      }
+      fragment.appendChild(el);
     });
+
+    componentsList.innerHTML = '';
+    componentsList.appendChild(fragment);
   }
   updateAll();
+}
+
+function updateComponentElement(el, comp, index) {
+  const select = el.querySelector('.comp-type-select');
+  if (select && select.value !== comp.type) {
+    select.value = comp.type;
+  }
+
+  const upBtn = el.querySelector('.comp-arrow:first-child');
+  const downBtn = el.querySelector('.comp-arrow:last-child');
+  if (upBtn) upBtn.disabled = index === 0;
+  if (downBtn) downBtn.disabled = index === state.components.length - 1;
+
+  const fields = el.querySelector('.comp-fields');
+  if (fields && el._lastType !== comp.type) {
+    el._lastType = comp.type;
+    fields.innerHTML = '';
+    switch (comp.type) {
+      case 'text':
+        fields.appendChild(createTextarea('文本', comp, 'text'));
+        break;
+      case 'selector':
+        fields.appendChild(createField('选择器', comp, 'selector', 'text', '@p'));
+        break;
+      case 'score': {
+        const group = document.createElement('div');
+        group.className = 'comp-field-group';
+        group.appendChild(createField('目标', comp, 'scoreName', 'text'));
+        group.appendChild(createField('记分项', comp, 'scoreObjective', 'text'));
+        fields.appendChild(group);
+        break;
+      }
+      case 'translate':
+        fields.appendChild(createField('翻译键', comp, 'translate', 'text'));
+        fields.appendChild(createField('参数（逗号分隔）', comp, 'with', 'text'));
+        break;
+    }
+  }
 }
 
 function createComponentElement(comp, index) {
   const card = document.createElement('div');
   card.className = 'component-card';
+  card.dataset.id = comp.id;
 
   const header = document.createElement('div');
   header.className = 'comp-header';
@@ -257,8 +463,10 @@ function createComponentElement(comp, index) {
     select.appendChild(opt);
   });
   select.addEventListener('change', () => {
+    pushUndo();
     comp.type = select.value;
     renderComponents();
+    saveState();
   });
 
   const arrows = document.createElement('div');
@@ -269,14 +477,14 @@ function createComponentElement(comp, index) {
   upBtn.textContent = '↑';
   upBtn.title = '上移';
   upBtn.disabled = index === 0;
-  upBtn.addEventListener('click', () => moveComponent(index, -1));
+  upBtn.addEventListener('click', () => { pushUndo(); moveComponent(index, -1); });
 
   const downBtn = document.createElement('button');
   downBtn.className = 'comp-arrow';
   downBtn.textContent = '↓';
   downBtn.title = '下移';
   downBtn.disabled = index === state.components.length - 1;
-  downBtn.addEventListener('click', () => moveComponent(index, 1));
+  downBtn.addEventListener('click', () => { pushUndo(); moveComponent(index, 1); });
 
   arrows.appendChild(upBtn);
   arrows.appendChild(downBtn);
@@ -285,8 +493,10 @@ function createComponentElement(comp, index) {
   delBtn.className = 'comp-delete';
   delBtn.textContent = '✕';
   delBtn.addEventListener('click', () => {
+    pushUndo();
     state.components.splice(index, 1);
     renderComponents();
+    saveState();
   });
 
   const rightGroup = document.createElement('div');
@@ -333,7 +543,10 @@ function moveComponent(index, dir) {
   if (target < 0 || target >= state.components.length) return;
   [state.components[index], state.components[target]] = [state.components[target], state.components[index]];
   renderComponents();
+  saveState();
 }
+
+const debouncedFieldUpdate = debounce(() => { updateAll(); saveState(); }, 150);
 
 function createField(labelText, comp, prop, type, placeholder) {
   const wrapper = document.createElement('div');
@@ -347,7 +560,7 @@ function createField(labelText, comp, prop, type, placeholder) {
   input.spellcheck = false;
   input.addEventListener('input', () => {
     comp[prop] = input.value;
-    updateAll();
+    debouncedFieldUpdate();
   });
   wrapper.appendChild(label);
   wrapper.appendChild(input);
@@ -365,7 +578,7 @@ function createTextarea(labelText, comp, prop) {
   ta.placeholder = '支持 § 颜色代码 和 \\n 换行';
   ta.addEventListener('input', () => {
     comp[prop] = ta.value;
-    updateAll();
+    debouncedFieldUpdate();
   });
   wrapper.appendChild(label);
   wrapper.appendChild(ta);
@@ -521,43 +734,64 @@ function updateAll() {
   updateVisualPreview();
 }
 
+// ─── Segmented Indicator ───
+
+function updateIndicator(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const indicator = container.querySelector('.seg-indicator');
+  const active = container.querySelector('.active');
+  if (!indicator || !active) return;
+  indicator.style.width = active.offsetWidth + 'px';
+  indicator.style.transform = `translateX(${active.offsetLeft}px)`;
+}
+
 // ─── Events ───
 
 playerInput.addEventListener('input', () => {
   state.player = playerInput.value || '@a';
-  updateAll();
+  debouncedFieldUpdate();
 });
 
 document.querySelectorAll('.chip').forEach(btn => {
   btn.addEventListener('click', () => {
+    pushUndo();
     state.player = btn.dataset.value;
     playerInput.value = state.player;
     updateAll();
+    saveState();
   });
 });
 
 typeSelector.querySelectorAll('.segmented-item').forEach(btn => {
   btn.addEventListener('click', () => {
+    pushUndo();
     typeSelector.querySelectorAll('.segmented-item').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     state.type = btn.dataset.type;
+    updateIndicator('typeSelector');
     updateAll();
+    saveState();
   });
 });
 
 addBtn.addEventListener('click', () => {
+  pushUndo();
   state.components.push({
     id: generateId(), type: 'text', text: '', selector: '@p',
     scoreName: '', scoreObjective: '', translate: '', with: '',
   });
   renderComponents();
+  saveState();
 });
 
 clearAllBtn.addEventListener('click', () => {
   if (state.components.length === 0) return;
   if (!confirm('确定要清空所有组件吗？')) return;
+  pushUndo();
   state.components = [];
   renderComponents();
+  clearState();
   showToast('已清空');
 });
 
@@ -572,8 +806,17 @@ document.querySelectorAll('.cmd-tab').forEach(tab => {
     document.querySelectorAll('.cmd-tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
     cmdMode = tab.dataset.mode;
+    updateIndicator('cmdTabs');
     updateCommandPreview();
   });
+});
+
+document.getElementById('undoBtn').addEventListener('click', undo);
+document.getElementById('redoBtn').addEventListener('click', redo);
+
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); redo(); }
 });
 
 // ─── Toast ───
@@ -591,7 +834,62 @@ function showToast(msg) {
   toast._timer = setTimeout(() => toast.classList.remove('show'), 1800);
 }
 
+// ─── Modal ───
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+document.querySelectorAll('.modal-close, .modal-cancel').forEach(btn => {
+  btn.addEventListener('click', () => {
+    btn.closest('.modal-overlay').classList.remove('open');
+  });
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+  }
+});
+
+document.getElementById('openImportBtn').addEventListener('click', () => {
+  importInput.value = '';
+  importError.textContent = '';
+  openModal('importModal');
+});
+
+document.getElementById('openRefBtn').addEventListener('click', () => {
+  openModal('refModal');
+});
+
+document.getElementById('importModalConfirm').addEventListener('click', doImport);
+
+importInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.ctrlKey) doImport();
+});
+
 // ─── Init ───
 
+initTheme();
 buildReferenceCard();
+
+if (loadState()) {
+  playerInput.value = state.player;
+  typeSelector.querySelectorAll('.segmented-item').forEach(b => {
+    b.classList.toggle('active', b.dataset.type === state.type);
+  });
+}
+
 renderComponents();
+updateIndicator('typeSelector');
+updateIndicator('cmdTabs');
