@@ -60,9 +60,7 @@ let cmdMode = 'format';
 let state = {
   player: '@a',
   type: 'title',
-  components: [
-    { id: generateId(), type: 'text', text: '', selector: '@p', scoreName: '', scoreObjective: '', translate: '', with: '' }
-  ]
+  components: []
 };
 
 const playerInput = document.getElementById('playerInput');
@@ -130,6 +128,10 @@ function doImport() {
   const raw = importInput.value.trim();
   if (!raw) { importError.textContent = '请粘贴命令或 JSON'; return; }
 
+  if (state.components.length > 0) {
+    if (!confirm('导入将替换当前所有组件，是否继续？')) return;
+  }
+
   try {
     const result = parseImport(raw);
     if (result.player !== null) {
@@ -159,7 +161,7 @@ function parseImport(text) {
   let type = null;
 
   // Try full /titleraw command
-  const cmdMatch = text.match(/^\/titleraw\s+(\S+)\s+(\S+)\s+([\s\S]+)$/i);
+  const cmdMatch = text.match(/^\/?titleraw\s+(\S+)\s+(\S+)\s+([\s\S]+)$/i);
   if (cmdMatch) {
     player = cmdMatch[1];
     type = cmdMatch[2];
@@ -225,9 +227,16 @@ function parseImport(text) {
 
 function renderComponents() {
   componentsList.innerHTML = '';
-  state.components.forEach((comp, i) => {
-    componentsList.appendChild(createComponentElement(comp, i));
-  });
+  if (state.components.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.textContent = '点击「+ 添加组件」开始编辑';
+    componentsList.appendChild(empty);
+  } else {
+    state.components.forEach((comp, i) => {
+      componentsList.appendChild(createComponentElement(comp, i));
+    });
+  }
   updateAll();
 }
 
@@ -257,14 +266,14 @@ function createComponentElement(comp, index) {
 
   const upBtn = document.createElement('button');
   upBtn.className = 'comp-arrow';
-  upBtn.textContent = '▲';
+  upBtn.textContent = '↑';
   upBtn.title = '上移';
   upBtn.disabled = index === 0;
   upBtn.addEventListener('click', () => moveComponent(index, -1));
 
   const downBtn = document.createElement('button');
   downBtn.className = 'comp-arrow';
-  downBtn.textContent = '▼';
+  downBtn.textContent = '↓';
   downBtn.title = '下移';
   downBtn.disabled = index === state.components.length - 1;
   downBtn.addEventListener('click', () => moveComponent(index, 1));
@@ -280,9 +289,15 @@ function createComponentElement(comp, index) {
     renderComponents();
   });
 
+  const rightGroup = document.createElement('div');
+  rightGroup.style.display = 'flex';
+  rightGroup.style.alignItems = 'center';
+  rightGroup.style.gap = '2px';
+  rightGroup.appendChild(arrows);
+  rightGroup.appendChild(delBtn);
+
   header.appendChild(select);
-  header.appendChild(arrows);
-  header.appendChild(delBtn);
+  header.appendChild(rightGroup);
   card.appendChild(header);
 
   const fields = document.createElement('div');
@@ -298,8 +313,8 @@ function createComponentElement(comp, index) {
     case 'score': {
       const group = document.createElement('div');
       group.className = 'comp-field-group';
-      group.appendChild(createField('计分项名称', comp, 'scoreName', 'text'));
-      group.appendChild(createField('计分板目标', comp, 'scoreObjective', 'text'));
+      group.appendChild(createField('目标', comp, 'scoreName', 'text'));
+      group.appendChild(createField('记分项', comp, 'scoreObjective', 'text'));
       fields.appendChild(group);
       break;
     }
@@ -461,16 +476,32 @@ function obfuscateText(text) {
 function buildPreviewHTML() {
   let html = '';
   state.components.forEach(comp => {
-    let text = '';
     switch (comp.type) {
-      case 'text': text = comp.text || ''; break;
-      case 'selector': text = comp.selector || ''; break;
-      case 'score': text = (comp.scoreName || '?') + '.' + (comp.scoreObjective || '?'); break;
-      case 'translate': text = comp.translate || ''; break;
+      case 'text': {
+        const t = comp.text || '';
+        if (!t) return;
+        const parsed = parseFormattedText(t);
+        if (parsed) html += parsed;
+        break;
+      }
+      case 'selector': {
+        if (!comp.selector) return;
+        html += '<span style="color:#aaaaaa">[target]</span>';
+        break;
+      }
+      case 'score': {
+        if (!comp.scoreName && !comp.scoreObjective) return;
+        html += '<span style="color:#aaaaaa">[0]</span>';
+        break;
+      }
+      case 'translate': {
+        const t = comp.translate || '';
+        if (!t) return;
+        const parsed = parseFormattedText(t);
+        if (parsed) html += parsed;
+        break;
+      }
     }
-    if (!text) return;
-    const parsed = parseFormattedText(text);
-    if (parsed) html += parsed;
   });
   return html || '<span style="opacity:0.35">（空）</span>';
 }
@@ -524,8 +555,10 @@ addBtn.addEventListener('click', () => {
 
 clearAllBtn.addEventListener('click', () => {
   if (state.components.length === 0) return;
+  if (!confirm('确定要清空所有组件吗？')) return;
   state.components = [];
   renderComponents();
+  showToast('已清空');
 });
 
 copyBtn.addEventListener('click', () => {
