@@ -193,18 +193,91 @@ export function updateAddFields(type, comp) {
       break;
     }
     case 'translate': {
-      const t = document.createElement('input');
-      t.id = 'addCompTranslate';
-      t.type = 'text';
-      t.value = comp ? comp.translate || '' : '';
-      t.placeholder = '翻译键';
-      container.appendChild(t);
-      const w = document.createElement('input');
-      w.id = 'addCompWith';
-      w.type = 'text';
-      w.value = comp ? comp.with || '' : '';
-      w.placeholder = '参数（逗号分隔）';
-      container.appendChild(w);
+      const keyLabel = document.createElement('div');
+      keyLabel.className = 'modal-field-label';
+      keyLabel.textContent = '键名';
+      const keyInput = document.createElement('input');
+      keyInput.id = 'addCompTranslate';
+      keyInput.type = 'text';
+      keyInput.value = comp ? comp.translate || '' : '';
+      keyInput.placeholder = '翻译键';
+      container.appendChild(keyLabel);
+      container.appendChild(keyInput);
+
+      const withTypeLabel = document.createElement('div');
+      withTypeLabel.className = 'modal-field-label';
+      withTypeLabel.textContent = 'WITH 类型';
+      const withTypeSelect = document.createElement('select');
+      withTypeSelect.className = 'with-type-select';
+      const opt = document.createElement('option');
+      opt.value = 'list';
+      opt.textContent = '[...] 列表';
+      withTypeSelect.appendChild(opt);
+      container.appendChild(withTypeLabel);
+      container.appendChild(withTypeSelect);
+
+      const withParamsLabel = document.createElement('div');
+      withParamsLabel.className = 'modal-field-label';
+      withParamsLabel.textContent = 'WITH 参数';
+      container.appendChild(withParamsLabel);
+
+      const paramsArea = document.createElement('div');
+      paramsArea.className = 'with-params-area';
+      container.appendChild(paramsArea);
+
+      const withStr = comp ? comp.with || '' : '';
+      let params = withStr ? withStr.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+      function renderParams() {
+        paramsArea.innerHTML = '';
+        if (params.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'with-params-empty';
+          empty.textContent = '无参数';
+          paramsArea.appendChild(empty);
+        } else {
+          params.forEach((p, i) => {
+            const item = document.createElement('div');
+            item.className = 'with-param-item';
+            const text = document.createElement('span');
+            text.textContent = p;
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'with-param-remove';
+            removeBtn.textContent = '✕';
+            removeBtn.addEventListener('click', () => {
+              params.splice(i, 1);
+              renderParams();
+              hiddenInput.value = params.join(', ');
+            });
+            item.appendChild(text);
+            item.appendChild(removeBtn);
+            paramsArea.appendChild(item);
+          });
+        }
+      }
+
+      renderParams();
+
+      const hiddenInput = document.createElement('input');
+      hiddenInput.id = 'addCompWith';
+      hiddenInput.type = 'hidden';
+      hiddenInput.value = withStr;
+      container.appendChild(hiddenInput);
+
+      const addParamBtn = document.createElement('button');
+      addParamBtn.type = 'button';
+      addParamBtn.className = 'with-param-add-btn';
+      addParamBtn.textContent = '添加参数';
+      addParamBtn.addEventListener('click', () => {
+        const input = prompt('输入参数:');
+        if (input !== null && input.trim() !== '') {
+          params.push(input.trim());
+          renderParams();
+          hiddenInput.value = params.join(', ');
+        }
+      });
+      container.appendChild(addParamBtn);
       break;
     }
   }

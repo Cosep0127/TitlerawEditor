@@ -448,6 +448,87 @@ header {
   color: var(--text);
 }
 
+/* Translate WITH Params */
+.with-type-select {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-family: var(--font);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  outline: none;
+  background: var(--input-bg);
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.with-type-select:focus {
+  border-color: var(--blue);
+}
+
+.with-params-area {
+  margin-bottom: 10px;
+}
+
+.with-params-empty {
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding: 8px 0;
+}
+
+.with-param-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.with-param-remove {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.with-param-remove:hover {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.with-param-add-btn {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.with-param-add-btn:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
 /* Player */
 .player-row {
   display: flex;
