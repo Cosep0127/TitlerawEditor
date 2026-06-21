@@ -33,7 +33,7 @@
             <button class="chip" data-value="@a">@a</button>
             <button class="chip" data-value="@p">@p</button>
             <button class="chip" data-value="@r">@r</button>
-            <button class="chip" data-value="@e[type=player]">@e[type=player]</button>
+            <button class="chip" data-value="@initiator">@initiator</button>
           </div>
         </div>
       </div>
@@ -51,7 +51,7 @@
 
   <!-- 操作按钮行 -->
   <div class="action-trigger-row">
-    <button id="openImportBtn" class="btn-action">导入指令</button>
+    <button id="openImportBtn" class="btn-action">导入命令</button>
     <button id="openRefBtn" class="btn-action">格式化代码表</button>
   </div>
 
@@ -79,14 +79,16 @@
 
   <!-- 命令预览 -->
   <section class="card cmd-card">
-    <div class="card-label">命令</div>
-    <div class="cmd-toolbar">
-      <div class="cmd-tabs" id="cmdTabs">
-        <div class="seg-indicator" id="cmdTabIndicator"></div>
-        <button class="cmd-tab active" data-mode="format">格式化</button>
-        <button class="cmd-tab" data-mode="minify">压缩</button>
+    <div class="cmd-header-row">
+      <div class="card-label cmd-label">命令</div>
+      <div class="cmd-toolbar">
+        <div class="cmd-tabs" id="cmdTabs">
+          <div class="seg-indicator" id="cmdTabIndicator"></div>
+          <button class="cmd-tab" data-mode="format">格式化</button>
+          <button class="cmd-tab active" data-mode="minify">压缩</button>
+        </div>
+        <button id="copyBtn" class="btn-copy" title="复制命令">复制</button>
       </div>
-      <button id="copyBtn" class="btn-copy" title="复制命令">复制</button>
     </div>
     <div class="cmd-box">
       <code id="commandPreview">/titleraw @a title {"rawtext":[]}</code>
@@ -95,20 +97,19 @@
 
 </main>
 
-<!-- Modal: 导入指令 -->
+<!-- Modal: 导入命令 -->
 <div class="modal-overlay" id="importModal">
   <div class="modal">
     <div class="modal-header">
-      <h2>导入指令</h2>
+      <h2>导入命令</h2>
       <button class="modal-close">✕</button>
     </div>
     <div class="modal-body">
-      <p class="modal-desc">粘贴 tellraw 或 titleraw 指令（开头可加 / 或不加），自动解析 JSON 部分</p>
+      <p class="modal-desc">粘贴完整/titleraw命令，自动解析JSON部分。也可只粘贴JSON。</p>
       <textarea id="importInput" rows="6" placeholder='tellraw @a {"rawtext":[...]} 或 /titleraw @a {...}'></textarea>
       <div id="importError" class="modal-error"></div>
     </div>
     <div class="modal-footer">
-      <button class="modal-cancel">取消</button>
       <button class="modal-confirm" id="importModalConfirm">解析</button>
     </div>
   </div>
@@ -147,6 +148,40 @@
   </div>
 </div>
 
-<script src="script.js"></script>
+<!-- Modal: 添加组件 -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="addModalTitle">添加组件</h2>
+      <button class="modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="add-comp-row">
+        <div class="modal-field-label">类型</div>
+        <div class="add-comp-type-group" id="addCompTypeGroup">
+          <div class="seg-indicator" id="addCompIndicator"></div>
+          <button class="add-comp-type-btn active" data-type="text">text</button>
+          <button class="add-comp-type-btn" data-type="selector">selector</button>
+          <button class="add-comp-type-btn" data-type="score">score</button>
+          <button class="add-comp-type-btn" data-type="translate">translate</button>
+        </div>
+      </div>
+      <div id="addCompFields" class="add-comp-fields"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-confirm" id="addModalConfirm">添加</button>
+    </div>
+  </div>
+</div>
+
+<script src="constants.js"></script>
+<script src="utils.js"></script>
+<script src="state.js"></script>
+<script src="parser.js"></script>
+<script src="generator.js"></script>
+<script src="preview.js"></script>
+<script src="components.js"></script>
+<script src="ui.js"></script>
+<script src="main.js"></script>
 </body>
 </html>

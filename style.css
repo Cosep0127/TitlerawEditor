@@ -351,6 +351,103 @@ header {
   background: var(--blue-hover);
 }
 
+/* Add Component Modal */
+.add-comp-row {
+  margin-bottom: 14px;
+}
+
+.modal-field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.add-comp-fields input,
+.add-comp-fields textarea {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-family: var(--font);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  outline: none;
+  background: var(--input-bg);
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.add-comp-fields input:focus,
+.add-comp-fields textarea:focus {
+  border-color: var(--blue);
+}
+
+.add-comp-fields textarea {
+  min-height: 80px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.add-comp-fields .comp-field-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.add-comp-fields .field {
+  flex: 1;
+}
+
+.add-comp-fields .field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.add-comp-fields .field input {
+  width: 100%;
+  margin-bottom: 0;
+}
+
+/* Add Component Type Slider */
+.add-comp-type-group {
+  display: flex;
+  gap: 2px;
+  background: var(--control-bg);
+  border-radius: 8px;
+  padding: 2px;
+  position: relative;
+}
+
+.add-comp-type-btn {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font);
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-secondary);
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.add-comp-type-btn.active {
+  color: var(--text);
+}
+
+.add-comp-type-btn:hover:not(.active) {
+  color: var(--text);
+}
+
 /* Player */
 .player-row {
   display: flex;
@@ -499,12 +596,14 @@ header {
 
 /* Component Cards */
 .component-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   background: var(--input-bg);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 16px;
-  margin-bottom: 12px;
-  transition: box-shadow 0.15s;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  overflow: hidden;
 }
 
 .component-card:last-child {
@@ -521,32 +620,41 @@ header {
   line-height: 1.6;
 }
 
-.component-card:hover {
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
-}
-
-.comp-header {
+.comp-left {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.comp-type-select {
-  padding: 5px 10px;
-  font-size: 13px;
-  font-family: var(--font);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--surface);
-  color: var(--text);
+  gap: 10px;
+  padding: 10px 14px;
+  flex: 1;
   cursor: pointer;
-  outline: none;
+  transition: background 0.12s;
 }
 
-.comp-arrows {
+.comp-left:hover {
+  background: var(--hover-bg);
+}
+
+.comp-badge {
+  font-family: 'SF Mono', 'Menlo', 'Monaco', 'Consolas', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--surface-alt);
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.comp-type-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.comp-right {
   display: flex;
+  align-items: center;
   gap: 2px;
+  padding: 6px;
 }
 
 .comp-arrow {
@@ -594,45 +702,25 @@ header {
   color: var(--danger);
 }
 
-/* Component Fields */
-.comp-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 14px;
-}
-
-.comp-fields label {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  display: block;
-  margin-bottom: 4px;
-}
-
-.comp-fields input,
-.comp-fields textarea {
-  width: 100%;
-  padding: 8px 12px;
-  font-size: 14px;
-  font-family: var(--font);
-  border: 1px solid var(--border);
+.comp-add {
+  width: 30px;
+  height: 30px;
+  border: none;
   border-radius: 6px;
-  outline: none;
-  transition: border-color 0.2s;
-  background: var(--surface);
-  color: var(--text);
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+  color: var(--text-tertiary);
 }
 
-.comp-fields textarea {
-  min-height: 60px;
-  resize: vertical;
-  line-height: 1.5;
-}
-
-.comp-fields input:focus,
-.comp-fields textarea:focus {
-  border-color: var(--blue);
+.comp-add:hover {
+  background: var(--hover-bg);
+  color: var(--blue);
 }
 
 .comp-field-group {
@@ -731,12 +819,24 @@ header {
 /* Command Preview */
 .cmd-card {}
 
+.cmd-header-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.cmd-label {
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
 .cmd-toolbar {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  margin-bottom: 10px;
+  margin-left: auto;
 }
 
 .cmd-tabs {

@@ -23,11 +23,19 @@ Minecraft 基岩版 `/titleraw` 命令的可视化编辑器，Apple 极简风格
 ## 文件
 
 ```text
-├── index.html      页面骨架
-├── style.css       样式（含深色模式变量）
-├── script.js       交互逻辑（状态管理、撤销/重做、主题切换）
+├── index.html       页面骨架
+├── style.css        样式（含深色模式变量）
+├── constants.js     颜色数据与格式化编码映射
+├── utils.js         工具函数（ID 生成、防抖）
+├── state.js         应用状态、撤销/重做、localStorage
+├── parser.js        命令/JSON 解析与导入
+├── generator.js     命令生成
+├── preview.js       格式化文本解析与视觉预览
+├── components.js    组件列表渲染
+├── ui.js            弹窗、提示、颜色参考卡、添加组件界面
+├── main.js          入口（DOM 引用、事件绑定、初始化）
 ├── tests/
-│   └── test.js     单元测试（36 个用例）
+│   └── test.js      单元测试（36 个用例）
 └── .gitignore
 ```
 
