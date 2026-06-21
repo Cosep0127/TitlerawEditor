@@ -252,6 +252,8 @@ export function updateAddFields(type, comp) {
       const withStr = comp ? comp.with || '' : '';
       let params = withStr ? withStr.split(',').map(s => s.trim()).filter(Boolean) : [];
 
+      let focusNewParam = false;
+
       function renderParams() {
         paramsArea.innerHTML = '';
         if (params.length === 0) {
@@ -263,19 +265,40 @@ export function updateAddFields(type, comp) {
           params.forEach((p, i) => {
             const item = document.createElement('div');
             item.className = 'with-param-item';
-            const text = document.createElement('span');
-            text.textContent = p;
-            const removeBtn = document.createElement('button');
-            removeBtn.type = 'button';
-            removeBtn.className = 'with-param-remove';
-            removeBtn.textContent = '✕';
-            removeBtn.addEventListener('click', () => {
-              params.splice(i, 1);
-              renderParams();
-              hiddenInput.value = params.join(', ');
-            });
-            item.appendChild(text);
-            item.appendChild(removeBtn);
+            if (p === '' && focusNewParam) {
+              const inp = document.createElement('input');
+              inp.type = 'text';
+              inp.className = 'with-param-inline-input';
+              inp.placeholder = '输入参数';
+              inp.value = '';
+              inp.addEventListener('keydown', e => {
+                if (e.key === 'Enter') { e.preventDefault(); inp.blur(); }
+                if (e.key === 'Escape') { params.splice(i, 1); renderParams(); hiddenInput.value = params.join(', '); }
+              });
+              inp.addEventListener('blur', () => {
+                const val = inp.value.trim();
+                if (val) { params[i] = val; } else { params.splice(i, 1); }
+                focusNewParam = false;
+                renderParams();
+                hiddenInput.value = params.join(', ');
+              });
+              item.appendChild(inp);
+              setTimeout(() => inp.focus(), 0);
+            } else {
+              const text = document.createElement('span');
+              text.textContent = p;
+              const removeBtn = document.createElement('button');
+              removeBtn.type = 'button';
+              removeBtn.className = 'with-param-remove';
+              removeBtn.textContent = '✕';
+              removeBtn.addEventListener('click', () => {
+                params.splice(i, 1);
+                renderParams();
+                hiddenInput.value = params.join(', ');
+              });
+              item.appendChild(text);
+              item.appendChild(removeBtn);
+            }
             paramsArea.appendChild(item);
           });
         }
@@ -294,12 +317,9 @@ export function updateAddFields(type, comp) {
       addParamBtn.className = 'chip with-param-add-chip';
       addParamBtn.textContent = '添加参数';
       addParamBtn.addEventListener('click', () => {
-        const input = prompt('输入参数:');
-        if (input !== null && input.trim() !== '') {
-          params.push(input.trim());
-          renderParams();
-          hiddenInput.value = params.join(', ');
-        }
+        params.push('');
+        focusNewParam = true;
+        renderParams();
       });
       container.appendChild(addParamBtn);
       break;
