@@ -449,21 +449,43 @@ header {
 }
 
 /* Translate WITH Params */
-.with-type-select {
-  width: 100%;
-  padding: 8px 12px;
-  font-size: 14px;
-  font-family: var(--font);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  outline: none;
-  background: var(--input-bg);
-  color: var(--text);
+.with-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 10px;
 }
 
-.with-type-select:focus {
-  border-color: var(--blue);
+.with-type-seg {
+  display: inline-flex;
+  gap: 2px;
+  background: var(--control-bg);
+  border-radius: 7px;
+  padding: 2px;
+  position: relative;
+}
+
+.with-type-btn {
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font);
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-secondary);
+  position: relative;
+  z-index: 1;
+}
+
+.with-type-btn.active {
+  color: var(--text);
+}
+
+.with-param-add-chip {
+  display: block;
+  margin: 0 auto;
 }
 
 .with-params-area {
@@ -506,27 +528,6 @@ header {
 .with-param-remove:hover {
   background: var(--danger-bg);
   color: var(--danger);
-}
-
-.with-param-add-btn {
-  display: block;
-  width: 100%;
-  padding: 10px;
-  font-size: 14px;
-  font-weight: 500;
-  font-family: var(--font);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface);
-  color: var(--text);
-  cursor: pointer;
-  transition: all 0.15s;
-  text-align: center;
-}
-
-.with-param-add-btn:hover {
-  border-color: var(--blue);
-  color: var(--blue);
 }
 
 /* Player */

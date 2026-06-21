@@ -204,22 +204,46 @@ export function updateAddFields(type, comp) {
       container.appendChild(keyLabel);
       container.appendChild(keyInput);
 
-      const withTypeLabel = document.createElement('div');
-      withTypeLabel.className = 'modal-field-label';
-      withTypeLabel.textContent = 'WITH 类型';
-      const withTypeSelect = document.createElement('select');
-      withTypeSelect.className = 'with-type-select';
-      const opt = document.createElement('option');
-      opt.value = 'list';
-      opt.textContent = '[...] 列表';
-      withTypeSelect.appendChild(opt);
-      container.appendChild(withTypeLabel);
-      container.appendChild(withTypeSelect);
+      const withHeader = document.createElement('div');
+      withHeader.className = 'with-header';
+      const withLabel = document.createElement('div');
+      withLabel.className = 'modal-field-label';
+      withLabel.textContent = 'WITH';
+      withLabel.style.marginBottom = '0';
+      const withSeg = document.createElement('div');
+      withSeg.className = 'with-type-seg';
+      const withIndicator = document.createElement('div');
+      withIndicator.className = 'seg-indicator';
+      const btnList = document.createElement('button');
+      btnList.type = 'button';
+      btnList.className = 'with-type-btn active';
+      btnList.textContent = '[…]';
+      btnList.dataset.withType = 'list';
+      const btnObj = document.createElement('button');
+      btnObj.type = 'button';
+      btnObj.className = 'with-type-btn';
+      btnObj.textContent = '{…}';
+      btnObj.dataset.withType = 'object';
+      withSeg.appendChild(withIndicator);
+      withSeg.appendChild(btnList);
+      withSeg.appendChild(btnObj);
+      withHeader.appendChild(withLabel);
+      withHeader.appendChild(withSeg);
+      container.appendChild(withHeader);
 
-      const withParamsLabel = document.createElement('div');
-      withParamsLabel.className = 'modal-field-label';
-      withParamsLabel.textContent = 'WITH 参数';
-      container.appendChild(withParamsLabel);
+      function positionWithIndicator(btn) {
+        withIndicator.style.width = btn.offsetWidth + 'px';
+        withIndicator.style.transform = 'translateX(' + btn.offsetLeft + 'px)';
+      }
+      requestAnimationFrame(() => positionWithIndicator(btnList));
+      [btnList, btnObj].forEach(btn => {
+        btn.addEventListener('click', () => {
+          btnList.classList.remove('active');
+          btnObj.classList.remove('active');
+          btn.classList.add('active');
+          positionWithIndicator(btn);
+        });
+      });
 
       const paramsArea = document.createElement('div');
       paramsArea.className = 'with-params-area';
@@ -267,7 +291,7 @@ export function updateAddFields(type, comp) {
 
       const addParamBtn = document.createElement('button');
       addParamBtn.type = 'button';
-      addParamBtn.className = 'with-param-add-btn';
+      addParamBtn.className = 'chip with-param-add-chip';
       addParamBtn.textContent = '添加参数';
       addParamBtn.addEventListener('click', () => {
         const input = prompt('输入参数:');
