@@ -1,0 +1,17 @@
+export const playerInput = document.getElementById('playerInput');
+export const typeSelector = document.getElementById('typeSelector');
+export const componentsList = document.getElementById('componentsList');
+export const commandPreview = document.getElementById('commandPreview');
+export const copyBtn = document.getElementById('copyBtn');
+export const addBtn = document.getElementById('addComponentBtn');
+export const clearAllBtn = document.getElementById('clearAllBtn');
+export const vTitle = document.getElementById('vTitle');
+export const vSubtitle = document.getElementById('vSubtitle');
+export const vActionbar = document.getElementById('vActionbar');
+export const refColorGrid = document.getElementById('refColorGrid');
+export const refMaterialGrid = document.getElementById('refMaterialGrid');
+export const refOtherGrid = document.getElementById('refOtherGrid');
+export const refFormatRow = document.getElementById('refFormatRow');
+export const importInput = document.getElementById('importInput');
+export const importError = document.getElementById('importError');
+export const themeToggle = document.getElementById('themeToggle');

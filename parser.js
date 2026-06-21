@@ -1,4 +1,11 @@
-function parseImport(text) {
+import { COLOR_TO_CODE } from './constants.js';
+import { generateId } from './utils.js';
+import { importInput, importError, playerInput, typeSelector } from './dom.js';
+import { state, pushUndo, saveState } from './state.js';
+import { renderComponents } from './components.js';
+import { showToast, closeModal, updateIndicator } from './ui.js';
+
+export function parseImport(text) {
   text = text.trim();
 
   let jsonStr = text;
@@ -65,7 +72,7 @@ function parseImport(text) {
   return { player, type, components };
 }
 
-function doImport() {
+export function doImport() {
   const raw = importInput.value.trim();
   if (!raw) { importError.textContent = '请粘贴命令或 JSON'; return; }
 

@@ -1,4 +1,8 @@
-function showToast(msg) {
+import { FORMAT_COLORS, STANDARD_CODES, MATERIAL_CODES, OTHER_CODES } from './constants.js';
+import { state, editingIndex, insertAfterIndex, setEditingIndex, setInsertAfterIndex } from './state.js';
+import { refColorGrid, refMaterialGrid, refOtherGrid, refFormatRow } from './dom.js';
+
+export function showToast(msg) {
   let toast = document.querySelector('.toast');
   if (!toast) {
     toast = document.createElement('div');
@@ -11,15 +15,15 @@ function showToast(msg) {
   toast._timer = setTimeout(() => toast.classList.remove('show'), 1800);
 }
 
-function openModal(id) {
+export function openModal(id) {
   document.getElementById(id).classList.add('open');
 }
 
-function closeModal(id) {
+export function closeModal(id) {
   document.getElementById(id).classList.remove('open');
 }
 
-function updateIndicator(containerId) {
+export function updateIndicator(containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
   const indicator = container.querySelector('.seg-indicator');
@@ -29,7 +33,7 @@ function updateIndicator(containerId) {
   indicator.style.transform = `translateX(${active.offsetLeft}px)`;
 }
 
-function copyCode(code, label) {
+export function copyCode(code, label) {
   navigator.clipboard.writeText(code).then(() => {
     showToast('已复制 ' + label);
   }).catch(() => showToast('复制失败'));
@@ -68,7 +72,7 @@ function createColorCard(code) {
   return card;
 }
 
-function buildReferenceCard() {
+export function buildReferenceCard() {
   STANDARD_CODES.forEach(code => {
     refColorGrid.appendChild(createColorCard(code));
   });
@@ -86,9 +90,9 @@ function buildReferenceCard() {
   });
 }
 
-function openAddModal() {
-  editingIndex = -1;
-  insertAfterIndex = -1;
+export function openAddModal() {
+  setEditingIndex(-1);
+  setInsertAfterIndex(-1);
   document.getElementById('addModalTitle').textContent = '添加组件';
   document.getElementById('addModalConfirm').textContent = '添加';
   document.querySelectorAll('#addCompTypeGroup .add-comp-type-btn').forEach(b => b.classList.remove('active'));
@@ -98,9 +102,9 @@ function openAddModal() {
   openModal('addModal');
 }
 
-function openEditModal(index) {
-  editingIndex = index;
-  insertAfterIndex = -1;
+export function openEditModal(index) {
+  setEditingIndex(index);
+  setInsertAfterIndex(-1);
   const comp = state.components[index];
   document.getElementById('addModalTitle').textContent = '编辑组件';
   document.getElementById('addModalConfirm').textContent = '保存';
@@ -112,9 +116,9 @@ function openEditModal(index) {
   openModal('addModal');
 }
 
-function openAddAfterModal(index) {
-  editingIndex = -1;
-  insertAfterIndex = index;
+export function openAddAfterModal(index) {
+  setEditingIndex(-1);
+  setInsertAfterIndex(index);
   document.getElementById('addModalTitle').textContent = '添加组件';
   document.getElementById('addModalConfirm').textContent = '添加';
   document.querySelectorAll('#addCompTypeGroup .add-comp-type-btn').forEach(b => b.classList.remove('active'));
@@ -124,7 +128,7 @@ function openAddAfterModal(index) {
   openModal('addModal');
 }
 
-function updateAddCompIndicator() {
+export function updateAddCompIndicator() {
   const group = document.getElementById('addCompTypeGroup');
   const indicator = group.querySelector('.seg-indicator');
   const active = group.querySelector('.active');
@@ -133,7 +137,7 @@ function updateAddCompIndicator() {
   indicator.style.transform = `translateX(${active.offsetLeft}px)`;
 }
 
-function updateAddFields(type, comp) {
+export function updateAddFields(type, comp) {
   const container = document.getElementById('addCompFields');
   container.innerHTML = '';
   switch (type) {

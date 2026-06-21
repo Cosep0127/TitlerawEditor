@@ -1,4 +1,9 @@
-function renderComponents() {
+import { state, pushUndo, saveState } from './state.js';
+import { componentsList } from './dom.js';
+import { openEditModal, openAddAfterModal } from './ui.js';
+import { updateAll } from './preview.js';
+
+export function renderComponents() {
   const existing = new Map();
   componentsList.querySelectorAll('.component-card').forEach(el => {
     existing.set(el.dataset.id, el);
@@ -108,7 +113,7 @@ function createComponentElement(comp, index) {
   return card;
 }
 
-function moveComponent(index, dir) {
+export function moveComponent(index, dir) {
   const target = index + dir;
   if (target < 0 || target >= state.components.length) return;
   [state.components[index], state.components[target]] = [state.components[target], state.components[index]];

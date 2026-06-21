@@ -1,22 +1,11 @@
-const playerInput = document.getElementById('playerInput');
-const typeSelector = document.getElementById('typeSelector');
-const componentsList = document.getElementById('componentsList');
-const commandPreview = document.getElementById('commandPreview');
-const copyBtn = document.getElementById('copyBtn');
-const addBtn = document.getElementById('addComponentBtn');
-const clearAllBtn = document.getElementById('clearAllBtn');
-const vTitle = document.getElementById('vTitle');
-const vSubtitle = document.getElementById('vSubtitle');
-const vActionbar = document.getElementById('vActionbar');
-const refColorGrid = document.getElementById('refColorGrid');
-const refMaterialGrid = document.getElementById('refMaterialGrid');
-const refOtherGrid = document.getElementById('refOtherGrid');
-const refFormatRow = document.getElementById('refFormatRow');
-const importInput = document.getElementById('importInput');
-const importError = document.getElementById('importError');
-
-const themeToggle = document.getElementById('themeToggle');
-const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+import { THEME_KEY, state, cmdMode, setCmdMode, editingIndex, insertAfterIndex, pushUndo, undo, redo, saveState, loadState, clearState } from './state.js';
+import { debounce, generateId } from './utils.js';
+import { playerInput, typeSelector, componentsList, commandPreview, copyBtn, addBtn, clearAllBtn, vTitle, vSubtitle, vActionbar, importInput, importError, themeToggle } from './dom.js';
+import { renderComponents } from './components.js';
+import { showToast, openModal, closeModal, updateIndicator, buildReferenceCard, openAddModal, updateAddFields, updateAddCompIndicator } from './ui.js';
+import { generateCommand, updateCommandPreview } from './generator.js';
+import { updateAll } from './preview.js';
+import { doImport } from './parser.js';
 
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
@@ -27,6 +16,7 @@ function applyTheme(theme) {
 function initTheme() {
   const saved = localStorage.getItem(THEME_KEY);
   if (saved) { applyTheme(saved); return; }
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
   applyTheme(prefersDark.matches ? 'dark' : 'light');
 }
 
@@ -38,7 +28,7 @@ themeToggle.addEventListener('click', () => {
   applyTheme(next);
 });
 
-prefersDark.addEventListener('change', (e) => {
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
   if (!localStorage.getItem(THEME_KEY)) {
     applyTheme(e.matches ? 'dark' : 'light');
   }
@@ -131,18 +121,30 @@ document.querySelectorAll('.cmd-tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.cmd-tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
-    cmdMode = tab.dataset.mode;
+    setCmdMode(tab.dataset.mode);
     updateIndicator('cmdTabs');
     updateCommandPreview();
   });
 });
 
-document.getElementById('undoBtn').addEventListener('click', undo);
-document.getElementById('redoBtn').addEventListener('click', redo);
+function handleUndo() {
+  undo();
+  renderComponents();
+  updateIndicator('typeSelector');
+}
+
+function handleRedo() {
+  redo();
+  renderComponents();
+  updateIndicator('typeSelector');
+}
+
+document.getElementById('undoBtn').addEventListener('click', handleUndo);
+document.getElementById('redoBtn').addEventListener('click', handleRedo);
 
 document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
-  if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); redo(); }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) { e.preventDefault(); handleUndo(); }
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); handleRedo(); }
 });
 
 document.querySelectorAll('.modal-overlay').forEach(overlay => {

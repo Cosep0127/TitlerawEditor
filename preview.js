@@ -1,4 +1,9 @@
-function parseFormattedText(raw) {
+import { FORMAT_MAP, FORMAT_COLORS } from './constants.js';
+import { state } from './state.js';
+import { vTitle, vSubtitle, vActionbar } from './dom.js';
+import { updateCommandPreview } from './generator.js';
+
+export function parseFormattedText(raw) {
   if (!raw) return null;
 
   const parts = [];
@@ -98,7 +103,7 @@ function updateVisualPreview() {
   else if (state.type === 'actionbar') vActionbar.innerHTML = html;
 }
 
-function updateAll() {
+export function updateAll() {
   updateCommandPreview();
   updateVisualPreview();
 }

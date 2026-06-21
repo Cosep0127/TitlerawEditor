@@ -1,6 +1,9 @@
-let cmdMode = 'minify';
+import { playerInput, typeSelector } from './dom.js';
 
-const state = {
+export let cmdMode = 'minify';
+export function setCmdMode(m) { cmdMode = m; }
+
+export const state = {
   player: '@a',
   type: 'title',
   components: []
@@ -9,8 +12,10 @@ const state = {
 const MAX_HISTORY = 100;
 let undoStack = [];
 let redoStack = [];
-let editingIndex = -1;
-let insertAfterIndex = -1;
+export let editingIndex = -1;
+export let insertAfterIndex = -1;
+export function setEditingIndex(v) { editingIndex = v; }
+export function setInsertAfterIndex(v) { insertAfterIndex = v; }
 
 function snapshot() {
   return {
@@ -28,30 +33,27 @@ function restore(snap) {
   typeSelector.querySelectorAll('.segmented-item').forEach(b => {
     b.classList.toggle('active', b.dataset.type === state.type);
   });
-  updateIndicator('typeSelector');
 }
 
-function pushUndo() {
+export function pushUndo() {
   undoStack.push(snapshot());
   if (undoStack.length > MAX_HISTORY) undoStack.shift();
   redoStack = [];
   updateHistoryButtons();
 }
 
-function undo() {
+export function undo() {
   if (undoStack.length === 0) return;
   redoStack.push(snapshot());
   restore(undoStack.pop());
-  renderComponents();
   updateHistoryButtons();
   saveState();
 }
 
-function redo() {
+export function redo() {
   if (redoStack.length === 0) return;
   undoStack.push(snapshot());
   restore(redoStack.pop());
-  renderComponents();
   updateHistoryButtons();
   saveState();
 }
@@ -60,19 +62,20 @@ function updateHistoryButtons() {
   document.getElementById('undoBtn').disabled = undoStack.length === 0;
   document.getElementById('redoBtn').disabled = redoStack.length === 0;
 }
+export { updateHistoryButtons };
 
 const STORAGE_KEY = 'titleraw-state';
-const THEME_KEY = 'titleraw-theme';
+export const THEME_KEY = 'titleraw-theme';
 let saveTimer = null;
 
-function saveState() {
+export function saveState() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
   }, 500);
 }
 
-function loadState() {
+export function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return false;
@@ -87,6 +90,6 @@ function loadState() {
   return false;
 }
 
-function clearState() {
+export function clearState() {
   try { localStorage.removeItem(STORAGE_KEY); } catch {}
 }

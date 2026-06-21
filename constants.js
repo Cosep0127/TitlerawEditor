@@ -1,4 +1,4 @@
-const COLORS = [
+export const COLORS = [
   { code: '0', name: 'black',           display: '黑色',         hex: '#000000' },
   { code: '1', name: 'dark_blue',       display: '深蓝色',       hex: '#0000AA' },
   { code: '2', name: 'dark_green',      display: '深绿色',       hex: '#00AA00' },
@@ -30,9 +30,9 @@ const COLORS = [
   { code: 'w', name: 'party_blue_color',   display: '组队蓝',   hex: '#8CB3FF' },
 ];
 
-const FORMAT_COLORS = new Map(COLORS.map(c => [c.code, c]));
+export const FORMAT_COLORS = new Map(COLORS.map(c => [c.code, c]));
 
-const COLOR_TO_CODE = {
+export const COLOR_TO_CODE = {
   black: '0', dark_blue: '1', dark_green: '2', dark_aqua: '3',
   dark_red: '4', dark_purple: '5', gold: '6', gray: '7',
   dark_gray: '8', blue: '9', green: 'a', aqua: 'b',
@@ -44,13 +44,13 @@ const COLOR_TO_CODE = {
   party_blue_color: 'w',
 };
 
-const FORMAT_MAP = {
+export const FORMAT_MAP = {
   l: 'bold', L: 'bold',
   o: 'italic', O: 'italic',
   k: 'obfuscated', K: 'obfuscated',
   r: 'reset', R: 'reset',
 };
 
-const STANDARD_CODES = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'];
-const MATERIAL_CODES = ['h','i','j','m','n','p','q','s','t','u','v'];
-const OTHER_CODES = ['g','w'];
+export const STANDARD_CODES = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'];
+export const MATERIAL_CODES = ['h','i','j','m','n','p','q','s','t','u','v'];
+export const OTHER_CODES = ['g','w'];

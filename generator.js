@@ -1,4 +1,7 @@
-function generateCommand() {
+import { state, cmdMode } from './state.js';
+import { commandPreview } from './dom.js';
+
+export function generateCommand() {
   const rawtext = state.components.map(comp => {
     const obj = {};
     switch (comp.type) {
@@ -34,6 +37,6 @@ function generateCommand() {
   return `/titleraw ${state.player} ${state.type} ${json}`;
 }
 
-function updateCommandPreview() {
+export function updateCommandPreview() {
   commandPreview.textContent = generateCommand();
 }
