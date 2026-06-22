@@ -10,13 +10,13 @@
 
 <header>
   <div class="header-inner">
-    <span class="logo">⌘</span>
-    <h1>/titleraw 可视化编辑器</h1>
-    <div style="display:flex;gap:2px;margin-left:8px;">
-      <button class="history-btn" id="undoBtn" title="撤销" disabled>↩</button>
-      <button class="history-btn" id="redoBtn" title="重做" disabled>↪</button>
+    <div class="header-left">
+      <button class="logo-btn" id="logoBtn">高级</button>
     </div>
-    <button class="theme-toggle" id="themeToggle" title="切换主题">☀</button>
+    <h1>/titleraw 可视化编辑器</h1>
+    <div class="header-right">
+      <button class="theme-toggle" id="themeToggle" title="切换主题">☀</button>
+    </div>
   </div>
 </header>
 
@@ -53,6 +53,10 @@
   <div class="action-trigger-row">
     <button id="openImportBtn" class="btn-action">导入命令</button>
     <button id="openRefBtn" class="btn-action">格式化代码表</button>
+    <div style="display:flex;gap:2px;margin-left:auto;">
+      <button class="btn-action" id="undoBtn" title="撤销" disabled>←</button>
+      <button class="btn-action" id="redoBtn" title="重做" disabled>→</button>
+    </div>
   </div>
 
   <!-- 组件列表 -->
@@ -173,6 +177,23 @@
     </div>
   </div>
 </div>
+
+<!-- Modal: 高级 -->
+<div class="modal-overlay" id="advModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>高级</h2>
+      <button class="modal-close">✕</button>
+    </div>
+    <div class="modal-body" style="text-align:center;padding:40px 20px;color:var(--text-secondary);">
+      暂未开放
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <p>· 网页代码100%由AI生成 ·</p>
+</footer>
 
 <script type="module" src="main.js"></script>
 </body>

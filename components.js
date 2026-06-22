@@ -3,6 +3,24 @@ import { componentsList } from './dom.js';
 import { openEditModal, openAddAfterModal } from './ui.js';
 import { updateAll } from './preview.js';
 
+function getPreviewText(comp) {
+  switch (comp.type) {
+    case 'text':
+      if (!comp.text) return '';
+      const first = comp.text.split('\n')[0];
+      return first.length < comp.text.length ? first + '…' : first;
+    case 'selector':
+      return comp.selector || '';
+    case 'score':
+      return (comp.scoreName || '?') + ' / ' + (comp.scoreObjective || '?');
+    case 'translate':
+      const n = comp.with ? comp.with.split(',').filter(s => s.trim()).length : 0;
+      return (comp.translate || '') + (n > 0 ? ' [' + n + ']' : '');
+    default:
+      return '';
+  }
+}
+
 export function renderComponents() {
   const existing = new Map();
   componentsList.querySelectorAll('.component-card').forEach(el => {
@@ -41,6 +59,8 @@ function updateComponentElement(el, comp, index) {
   if (badge) badge.textContent = `#${index + 1}`;
   const typeLabel = el.querySelector('.comp-type-label');
   if (typeLabel) typeLabel.textContent = comp.type;
+  const textEl = el.querySelector('.comp-text');
+  if (textEl) textEl.textContent = getPreviewText(comp);
   el.dataset.index = index;
   const arrows = el.querySelectorAll('.comp-arrow');
   if (arrows.length >= 2) {
@@ -70,6 +90,11 @@ function createComponentElement(comp, index) {
   left.appendChild(badge);
   left.appendChild(typeLabel);
   card.appendChild(left);
+
+  const textEl = document.createElement('span');
+  textEl.className = 'comp-text';
+  textEl.textContent = getPreviewText(comp);
+  card.appendChild(textEl);
 
   const right = document.createElement('div');
   right.className = 'comp-right';

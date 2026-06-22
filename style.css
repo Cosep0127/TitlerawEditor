@@ -79,25 +79,47 @@ header {
   padding: 14px 24px;
   display: flex;
   align-items: center;
-  gap: 10px;
 }
 
-.logo {
-  font-size: 22px;
-  opacity: 0.7;
+.header-left, .header-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.header-right {
+  justify-content: flex-end;
+}
+
+.logo-btn {
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font);
+  background: transparent;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.logo-btn:hover {
+  background: var(--hover-bg);
 }
 
 .header-inner h1 {
   font-size: 18px;
   font-weight: 600;
   letter-spacing: -0.02em;
+  text-align: center;
 }
 
 /* Container */
 .container {
   max-width: 760px;
   margin: 0 auto;
-  padding: 28px 24px 60px;
+  padding: 28px 24px 28px;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -196,10 +218,15 @@ header {
   transition: all 0.15s;
 }
 
-.btn-action:hover {
+.btn-action:hover:not(:disabled) {
   border-color: var(--blue);
   color: var(--blue);
   background: rgba(0, 122, 255, 0.05);
+}
+
+.btn-action:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 /* Modal */
@@ -751,6 +778,18 @@ header {
   font-size: 14px;
   font-weight: 500;
   color: var(--text);
+  flex-shrink: 0;
+}
+
+.comp-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding: 0 4px;
 }
 
 .comp-right {
@@ -1135,28 +1174,12 @@ header {
   100% { transform: rotate(360deg) scale(1); }
 }
 
-/* History Buttons */
-.history-btn {
-  width: 30px;
-  height: 30px;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  cursor: pointer;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s, color 0.15s;
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 24px 20px;
+  font-size: 13px;
   color: var(--text-tertiary);
 }
 
-.history-btn:hover:not(:disabled) {
-  background: var(--hover-bg);
-  color: var(--text);
-}
-
-.history-btn:disabled {
-  opacity: 0.3;
-  cursor: default;
-}
+/* (history-btn removed, using btn-action instead) */

@@ -15,3 +15,4 @@ export const refFormatRow = document.getElementById('refFormatRow');
 export const importInput = document.getElementById('importInput');
 export const importError = document.getElementById('importError');
 export const themeToggle = document.getElementById('themeToggle');
+export const logoBtn = document.getElementById('logoBtn');

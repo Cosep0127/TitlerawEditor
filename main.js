@@ -1,6 +1,6 @@
 import { THEME_KEY, state, cmdMode, setCmdMode, editingIndex, insertAfterIndex, pushUndo, undo, redo, saveState, loadState, clearState } from './state.js';
 import { debounce, generateId } from './utils.js';
-import { playerInput, typeSelector, componentsList, commandPreview, copyBtn, addBtn, clearAllBtn, vTitle, vSubtitle, vActionbar, importInput, importError, themeToggle } from './dom.js';
+import { playerInput, typeSelector, componentsList, commandPreview, copyBtn, addBtn, clearAllBtn, vTitle, vSubtitle, vActionbar, importInput, importError, themeToggle, logoBtn } from './dom.js';
 import { renderComponents } from './components.js';
 import { showToast, openModal, closeModal, updateIndicator, buildReferenceCard, openAddModal, updateAddFields, updateAddCompIndicator } from './ui.js';
 import { generateCommand, updateCommandPreview } from './generator.js';
@@ -170,6 +170,8 @@ document.getElementById('openImportBtn').addEventListener('click', () => {
   importError.textContent = '';
   openModal('importModal');
 });
+
+logoBtn.addEventListener('click', () => openModal('advModal'));
 
 document.getElementById('openRefBtn').addEventListener('click', () => {
   openModal('refModal');
