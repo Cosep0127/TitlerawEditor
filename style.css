@@ -1154,7 +1154,7 @@ header {
   transition: all 0.3s;
   pointer-events: none;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  z-index: 200;
+  z-index: 400;
 }
 
 .toast.show {
