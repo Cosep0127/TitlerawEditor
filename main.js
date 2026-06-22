@@ -1,8 +1,8 @@
-import { THEME_KEY, state, cmdMode, setCmdMode, editingIndex, insertAfterIndex, pushUndo, undo, redo, saveState, loadState, clearState } from './state.js';
+import { THEME_KEY, state, cmdMode, setCmdMode, editingIndex, insertAfterIndex, withComponents, pushUndo, undo, redo, saveState, loadState, clearState } from './state.js';
 import { debounce, generateId } from './utils.js';
 import { playerInput, typeSelector, componentsList, commandPreview, copyBtn, addBtn, clearAllBtn, vTitle, vSubtitle, vActionbar, importInput, importError, themeToggle, logoBtn } from './dom.js';
 import { renderComponents } from './components.js';
-import { showToast, openModal, closeModal, updateIndicator, buildReferenceCard, openAddModal, updateAddFields, updateAddCompIndicator } from './ui.js';
+import { showToast, openModal, closeModal, updateIndicator, buildReferenceCard, openAddModal, updateAddFields, updateAddCompIndicator, buildFields } from './ui.js';
 import { generateCommand, updateCommandPreview } from './generator.js';
 import { updateAll } from './preview.js';
 import { doImport } from './parser.js';
@@ -81,12 +81,27 @@ document.getElementById('addModalConfirm').addEventListener('click', () => {
     id: editingIndex >= 0 ? state.components[editingIndex].id : generateId(),
     type, text: '', selector: '@p',
     scoreName: '', scoreObjective: '', translate: '', with: '',
+    withType: 'list', withComponents: [],
   };
   switch (type) {
     case 'text': comp.text = document.getElementById('addCompText')?.value || ''; break;
     case 'selector': comp.selector = document.getElementById('addCompSelector')?.value || '@p'; break;
     case 'score': comp.scoreName = document.getElementById('addCompScoreName')?.value || ''; comp.scoreObjective = document.getElementById('addCompScoreObjective')?.value || ''; break;
-    case 'translate': comp.translate = document.getElementById('addCompTranslate')?.value || ''; comp.with = document.getElementById('addCompWith')?.value || ''; break;
+    case 'translate': {
+      comp.translate = document.getElementById('addCompTranslate')?.value || '';
+      const wt = document.getElementById('addCompWithType');
+      if (wt) {
+        comp.withType = wt.value;
+        if (comp.withType === 'object') {
+          comp.withComponents = withComponents.map(c => ({ ...c }));
+          comp.with = '';
+        } else {
+          comp.with = document.getElementById('addCompWith')?.value || '';
+          comp.withComponents = [];
+        }
+      }
+      break;
+    }
   }
   pushUndo();
   if (editingIndex >= 0) {
@@ -147,21 +162,23 @@ document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); handleRedo(); }
 });
 
-document.querySelectorAll('.modal-overlay').forEach(overlay => {
-  overlay.addEventListener('click', e => {
-    if (e.target === overlay) overlay.classList.remove('open');
-  });
-});
+function closeOverlay(overlay) {
+  overlay.classList.remove('open');
+  if (overlay.id && overlay.id.startsWith('withModal_')) {
+    setTimeout(() => { if (overlay.parentNode) overlay.remove(); }, 200);
+  }
+}
 
-document.querySelectorAll('.modal-close, .modal-cancel').forEach(btn => {
-  btn.addEventListener('click', () => {
-    btn.closest('.modal-overlay').classList.remove('open');
-  });
+document.addEventListener('click', e => {
+  const closeBtn = e.target.closest('.modal-close, .modal-cancel');
+  if (closeBtn) { closeOverlay(closeBtn.closest('.modal-overlay')); return; }
+  const overlay = e.target.closest('.modal-overlay');
+  if (overlay && e.target === overlay) closeOverlay(overlay);
 });
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
-    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+    document.querySelectorAll('.modal-overlay.open').forEach(closeOverlay);
   }
 });
 

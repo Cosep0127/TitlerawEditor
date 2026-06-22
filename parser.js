@@ -57,7 +57,11 @@ export function parseImport(text) {
     } else if (item.translate !== undefined) {
       comp.type = 'translate';
       comp.translate = item.translate || '';
-      if (item.with && Array.isArray(item.with)) {
+      if (item.with && typeof item.with === 'object' && !Array.isArray(item.with) && item.with.rawtext) {
+        comp.withType = 'object';
+        comp.withComponents = parseRawtextItems(item.with.rawtext);
+        comp.with = '';
+      } else if (item.with && Array.isArray(item.with)) {
         comp.with = item.with.join(', ');
       } else if (item.with) {
         comp.with = String(item.with);
@@ -70,6 +74,46 @@ export function parseImport(text) {
   });
 
   return { player, type, components };
+}
+
+function parseRawtextItems(arr) {
+  return arr.map(item => {
+    const c = {
+      id: generateId(), type: 'text', text: '',
+      selector: '@p', scoreName: '', scoreObjective: '',
+      translate: '', with: '', withType: 'list', withComponents: [],
+    };
+    if (item.text !== undefined) {
+      c.type = 'text';
+      let prefix = '';
+      if (item.color && COLOR_TO_CODE[item.color]) prefix += '§' + COLOR_TO_CODE[item.color];
+      if (item.bold) prefix += '§l';
+      if (item.italic) prefix += '§o';
+      if (item.obfuscated) prefix += '§k';
+      c.text = prefix + (item.text || '');
+    } else if (item.selector !== undefined) {
+      c.type = 'selector';
+      c.selector = item.selector;
+    } else if (item.score !== undefined) {
+      c.type = 'score';
+      c.scoreName = (item.score && item.score.name) || '';
+      c.scoreObjective = (item.score && item.score.objective) || '';
+    } else if (item.translate !== undefined) {
+      c.type = 'translate';
+      c.translate = item.translate || '';
+      if (item.with && typeof item.with === 'object' && !Array.isArray(item.with) && item.with.rawtext) {
+        c.withType = 'object';
+        c.withComponents = parseRawtextItems(item.with.rawtext);
+      } else if (item.with && Array.isArray(item.with)) {
+        c.with = item.with.join(', ');
+      } else if (item.with) {
+        c.with = String(item.with);
+      }
+    } else {
+      c.text = JSON.stringify(item);
+    }
+    return c;
+  });
 }
 
 export function doImport() {
@@ -94,7 +138,7 @@ export function doImport() {
       });
       updateIndicator('typeSelector');
     }
-    state.components = result.components.length ? result.components : [{ id: generateId(), type: 'text', text: '', selector: '@p', scoreName: '', scoreObjective: '', translate: '', with: '' }];
+    state.components = result.components.length ? result.components : [{ id: generateId(), type: 'text', text: '', selector: '@p', scoreName: '', scoreObjective: '', translate: '', with: '', withType: 'list', withComponents: [] }];
     importError.textContent = '';
     renderComponents();
     showToast('导入成功');

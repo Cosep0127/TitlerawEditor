@@ -17,18 +17,31 @@ export let insertAfterIndex = -1;
 export function setEditingIndex(v) { editingIndex = v; }
 export function setInsertAfterIndex(v) { insertAfterIndex = v; }
 
+export let withComponents = [];
+export let withNestingLevel = 0;
+export function setWithComponents(v) { withComponents = v; }
+export function setWithNestingLevel(v) { withNestingLevel = v; }
+
+function deepCloneComp(c) {
+  const cloned = { ...c };
+  if (cloned.withType === 'object' && cloned.withComponents) {
+    cloned.withComponents = cloned.withComponents.map(deepCloneComp);
+  }
+  return cloned;
+}
+
 function snapshot() {
   return {
     player: state.player,
     type: state.type,
-    components: state.components.map(c => ({ ...c }))
+    components: state.components.map(deepCloneComp)
   };
 }
 
 function restore(snap) {
   state.player = snap.player;
   state.type = snap.type;
-  state.components = snap.components.map(c => ({ ...c }));
+  state.components = snap.components.map(deepCloneComp);
   playerInput.value = state.player;
   typeSelector.querySelectorAll('.segmented-item').forEach(b => {
     b.classList.toggle('active', b.dataset.type === state.type);

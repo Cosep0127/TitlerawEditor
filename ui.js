@@ -1,6 +1,7 @@
 import { FORMAT_COLORS, STANDARD_CODES, MATERIAL_CODES, OTHER_CODES } from './constants.js';
-import { state, editingIndex, insertAfterIndex, setEditingIndex, setInsertAfterIndex } from './state.js';
+import { state, editingIndex, insertAfterIndex, setEditingIndex, setInsertAfterIndex, withComponents, withNestingLevel, setWithComponents, setWithNestingLevel } from './state.js';
 import { refColorGrid, refMaterialGrid, refOtherGrid, refFormatRow } from './dom.js';
+import { generateId } from './utils.js';
 
 export function showToast(msg) {
   let toast = document.querySelector('.toast');
@@ -138,7 +139,13 @@ export function updateAddCompIndicator() {
 }
 
 export function updateAddFields(type, comp) {
-  const container = document.getElementById('addCompFields');
+  buildFields('add', type, comp, 0);
+}
+
+export function buildFields(prefix, type, comp, nestingLevel) {
+  const suffix = nestingLevel === 0 ? '' : '_' + nestingLevel;
+  const containerId = prefix + 'CompFields' + suffix;
+  const container = document.getElementById(containerId);
   container.innerHTML = '';
   switch (type) {
     case 'text': {
@@ -146,7 +153,7 @@ export function updateAddFields(type, comp) {
       label.className = 'modal-field-label';
       label.textContent = '文本';
       const ta = document.createElement('textarea');
-      ta.id = 'addCompText';
+      ta.id = prefix + 'CompText' + suffix;
       ta.value = comp ? comp.text || '' : '';
       ta.placeholder = '支持 § 颜色代码 和 \\n 换行';
       ta.rows = 4;
@@ -159,7 +166,7 @@ export function updateAddFields(type, comp) {
       label.className = 'modal-field-label';
       label.textContent = '选择器';
       const inp = document.createElement('input');
-      inp.id = 'addCompSelector';
+      inp.id = prefix + 'CompSelector' + suffix;
       inp.type = 'text';
       inp.value = comp ? comp.selector || '@p' : '@p';
       inp.placeholder = '@p, @a, @r, ...';
@@ -175,7 +182,7 @@ export function updateAddFields(type, comp) {
       const nl = document.createElement('label');
       nl.textContent = '目标';
       const ni = document.createElement('input');
-      ni.id = 'addCompScoreName';
+      ni.id = prefix + 'CompScoreName' + suffix;
       ni.type = 'text';
       ni.value = comp ? comp.scoreName || '' : '';
       n.appendChild(nl); n.appendChild(ni);
@@ -184,7 +191,7 @@ export function updateAddFields(type, comp) {
       const ol = document.createElement('label');
       ol.textContent = '记分项';
       const oi = document.createElement('input');
-      oi.id = 'addCompScoreObjective';
+      oi.id = prefix + 'CompScoreObjective' + suffix;
       oi.type = 'text';
       oi.value = comp ? comp.scoreObjective || '' : '';
       o.appendChild(ol); o.appendChild(oi);
@@ -193,11 +200,20 @@ export function updateAddFields(type, comp) {
       break;
     }
     case 'translate': {
+      const pfx = prefix;
+      const withType = comp ? comp.withType || 'list' : 'list';
+
+      if (pfx === 'add') {
+        // Initialize global withComponents for the top-level translate
+        setWithComponents(withType === 'object' && comp ? comp.withComponents.map(c => ({ ...c })) : []);
+        setWithNestingLevel(0);
+      }
+
       const keyLabel = document.createElement('div');
       keyLabel.className = 'modal-field-label';
       keyLabel.textContent = '键名';
       const keyInput = document.createElement('input');
-      keyInput.id = 'addCompTranslate';
+      keyInput.id = pfx + 'CompTranslate' + suffix;
       keyInput.type = 'text';
       keyInput.value = comp ? comp.translate || '' : '';
       keyInput.placeholder = '翻译键';
@@ -216,7 +232,7 @@ export function updateAddFields(type, comp) {
       withIndicator.className = 'seg-indicator';
       const btnList = document.createElement('button');
       btnList.type = 'button';
-      btnList.className = 'with-type-btn active';
+      btnList.className = 'with-type-btn';
       btnList.textContent = '[…]';
       btnList.dataset.withType = 'list';
       const btnObj = document.createElement('button');
@@ -224,6 +240,7 @@ export function updateAddFields(type, comp) {
       btnObj.className = 'with-type-btn';
       btnObj.textContent = '{…}';
       btnObj.dataset.withType = 'object';
+      if (nestingLevel >= 2) btnObj.disabled = true;
       withSeg.appendChild(withIndicator);
       withSeg.appendChild(btnList);
       withSeg.appendChild(btnObj);
@@ -235,94 +252,317 @@ export function updateAddFields(type, comp) {
         withIndicator.style.width = btn.offsetWidth + 'px';
         withIndicator.style.transform = 'translateX(' + btn.offsetLeft + 'px)';
       }
-      requestAnimationFrame(() => positionWithIndicator(btnList));
-      [btnList, btnObj].forEach(btn => {
+
+      const contentArea = document.createElement('div');
+      contentArea.className = 'with-params-area';
+      container.appendChild(contentArea);
+
+      const hiddenWithType = document.createElement('input');
+      hiddenWithType.id = pfx + 'CompWithType' + suffix;
+      hiddenWithType.type = 'hidden';
+      hiddenWithType.value = withType;
+      container.appendChild(hiddenWithType);
+
+      const hiddenWith = document.createElement('input');
+      hiddenWith.id = pfx + 'CompWith' + suffix;
+      hiddenWith.type = 'hidden';
+      hiddenWith.value = withType === 'list' ? (comp ? comp.with || '' : '') : '';
+      container.appendChild(hiddenWith);
+
+      const addBtn = document.createElement('button');
+      addBtn.type = 'button';
+      addBtn.className = 'chip with-param-add-chip';
+      container.appendChild(addBtn);
+
+      let listParams = [];
+      if (withType === 'list') {
+        listParams = hiddenWith.value ? hiddenWith.value.split(',').map(s => s.trim()).filter(Boolean) : [];
+      }
+
+      function renderListItems(focusNew) {
+        contentArea.innerHTML = '';
+        if (listParams.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'with-params-empty';
+          empty.textContent = '无参数';
+          contentArea.appendChild(empty);
+        } else {
+          listParams.forEach((p, i) => {
+            const item = document.createElement('div');
+            item.className = 'with-param-item';
+            const inp = document.createElement('input');
+            inp.type = 'text';
+            inp.className = 'with-param-inline-input';
+            inp.value = p || '';
+            inp.placeholder = '输入参数';
+            inp.addEventListener('keydown', e => {
+              if (e.key === 'Enter') { e.preventDefault(); inp.blur(); }
+              if (e.key === 'Escape') { inp.value = p || ''; inp.blur(); }
+            });
+            inp.addEventListener('blur', () => {
+              const val = inp.value.trim();
+              if (val) { listParams[i] = val; } else { listParams.splice(i, 1); }
+              syncList();
+            });
+            item.appendChild(inp);
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'with-param-remove';
+            removeBtn.textContent = '✕';
+            removeBtn.addEventListener('click', () => {
+              listParams.splice(i, 1);
+              syncList();
+            });
+            item.appendChild(removeBtn);
+            contentArea.appendChild(item);
+          });
+        }
+        if (focusNew) {
+          const inputs = contentArea.querySelectorAll('.with-param-inline-input');
+          const last = inputs[inputs.length - 1];
+          if (last && !last.value) setTimeout(() => last.focus(), 0);
+        }
+      }
+
+      function syncList() {
+        hiddenWith.value = listParams.filter(Boolean).join(', ');
+        renderListItems();
+      }
+
+
+
+      function renderObjectItems() {
+        const comps = (pfx === 'add') ? withComponents : (comp ? comp.withComponents || [] : []);
+        contentArea.innerHTML = '';
+        if (comps.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'with-params-empty';
+          empty.textContent = '无组件';
+          contentArea.appendChild(empty);
+        } else {
+          comps.forEach((c, i) => {
+            const item = document.createElement('div');
+            item.className = 'with-component-item';
+            const typeSpan = document.createElement('span');
+            typeSpan.className = 'with-comp-type';
+            typeSpan.textContent = c.type;
+            const textSpan = document.createElement('span');
+            textSpan.className = 'with-comp-text';
+            textSpan.textContent = getCompShortPreview(c);
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'with-param-remove';
+            removeBtn.textContent = '✕';
+            removeBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              comps.splice(i, 1);
+              renderObjectItems();
+            });
+            item.appendChild(typeSpan);
+            item.appendChild(textSpan);
+            item.appendChild(removeBtn);
+            item.addEventListener('click', () => {
+              createWithModal(comps, i, nestingLevel + 1, prefix, c.type);
+            });
+            contentArea.appendChild(item);
+          });
+        }
+      }
+
+      function updateMode(mode) {
+        hiddenWithType.value = mode;
+        if (mode === 'object') {
+          addBtn.textContent = '添加组件';
+          renderObjectItems();
+        } else {
+          addBtn.textContent = '添加参数';
+          listParams = hiddenWith.value ? hiddenWith.value.split(',').map(s => s.trim()).filter(Boolean) : [];
+          renderListItems();
+        }
+      }
+
+      addBtn.addEventListener('click', () => {
+        if (hiddenWithType.value === 'object') {
+          createWithModal(
+            (prefix === 'add') ? withComponents : (comp ? comp.withComponents || [] : []),
+            -1, nestingLevel + 1, prefix, 'text'
+          );
+        } else {
+          listParams.push('');
+          renderListItems(true);
+        }
+      });
+
+      [btnList, btnObj].forEach((btn, idx) => {
         btn.addEventListener('click', () => {
           btnList.classList.remove('active');
           btnObj.classList.remove('active');
           btn.classList.add('active');
           positionWithIndicator(btn);
+          updateMode(btn.dataset.withType);
         });
       });
 
-      const paramsArea = document.createElement('div');
-      paramsArea.className = 'with-params-area';
-      container.appendChild(paramsArea);
-
-      const withStr = comp ? comp.with || '' : '';
-      let params = withStr ? withStr.split(',').map(s => s.trim()).filter(Boolean) : [];
-
-      let focusNewParam = false;
-
-      function renderParams() {
-        paramsArea.innerHTML = '';
-        if (params.length === 0) {
-          const empty = document.createElement('div');
-          empty.className = 'with-params-empty';
-          empty.textContent = '无参数';
-          paramsArea.appendChild(empty);
-        } else {
-          params.forEach((p, i) => {
-            const item = document.createElement('div');
-            item.className = 'with-param-item';
-            if (p === '' && focusNewParam) {
-              const inp = document.createElement('input');
-              inp.type = 'text';
-              inp.className = 'with-param-inline-input';
-              inp.placeholder = '输入参数';
-              inp.value = '';
-              inp.addEventListener('keydown', e => {
-                if (e.key === 'Enter') { e.preventDefault(); inp.blur(); }
-                if (e.key === 'Escape') { params.splice(i, 1); renderParams(); hiddenInput.value = params.join(', '); }
-              });
-              inp.addEventListener('blur', () => {
-                const val = inp.value.trim();
-                if (val) { params[i] = val; } else { params.splice(i, 1); }
-                focusNewParam = false;
-                renderParams();
-                hiddenInput.value = params.join(', ');
-              });
-              item.appendChild(inp);
-              setTimeout(() => inp.focus(), 0);
-            } else {
-              const text = document.createElement('span');
-              text.textContent = p;
-              const removeBtn = document.createElement('button');
-              removeBtn.type = 'button';
-              removeBtn.className = 'with-param-remove';
-              removeBtn.textContent = '✕';
-              removeBtn.addEventListener('click', () => {
-                params.splice(i, 1);
-                renderParams();
-                hiddenInput.value = params.join(', ');
-              });
-              item.appendChild(text);
-              item.appendChild(removeBtn);
-            }
-            paramsArea.appendChild(item);
-          });
-        }
+      // Set initial active state
+      if (withType === 'list') {
+        btnList.classList.add('active');
+      } else {
+        btnObj.classList.add('active');
       }
-
-      renderParams();
-
-      const hiddenInput = document.createElement('input');
-      hiddenInput.id = 'addCompWith';
-      hiddenInput.type = 'hidden';
-      hiddenInput.value = withStr;
-      container.appendChild(hiddenInput);
-
-      const addParamBtn = document.createElement('button');
-      addParamBtn.type = 'button';
-      addParamBtn.className = 'chip with-param-add-chip';
-      addParamBtn.textContent = '添加参数';
-      addParamBtn.addEventListener('click', () => {
-        params.push('');
-        focusNewParam = true;
-        renderParams();
+      requestAnimationFrame(() => {
+        const active = btnList.classList.contains('active') ? btnList : btnObj;
+        positionWithIndicator(active);
+        updateMode(active.dataset.withType);
       });
-      container.appendChild(addParamBtn);
       break;
     }
   }
+}
+
+function getCompShortPreview(c) {
+  switch (c.type) {
+    case 'text': return (c.text || '').split('\n')[0];
+    case 'selector': return c.selector || '';
+    case 'score': return (c.scoreName || '?') + ' / ' + (c.scoreObjective || '?');
+    case 'translate': return c.translate || '';
+    default: return '';
+  }
+}
+
+function withModalSaveHandler(modal, comps) {
+  const s = modal.id.replace('withModal_', '');
+  const prefix = 'with';
+  const suffix = '_' + s;
+  const active = modal.querySelector('.add-comp-type-group .active');
+  const type = active ? active.dataset.type : 'text';
+  const comp = {
+    id: generateId(),
+    type, text: '', selector: '@p',
+    scoreName: '', scoreObjective: '', translate: '', with: '',
+    withType: 'list', withComponents: [],
+  };
+  switch (type) {
+    case 'text': comp.text = (document.getElementById(prefix + 'CompText' + suffix)?.value || ''); break;
+    case 'selector': comp.selector = (document.getElementById(prefix + 'CompSelector' + suffix)?.value || '@p'); break;
+    case 'score': comp.scoreName = (document.getElementById(prefix + 'CompScoreName' + suffix)?.value || ''); comp.scoreObjective = (document.getElementById(prefix + 'CompScoreObjective' + suffix)?.value || ''); break;
+    case 'translate': {
+      comp.translate = (document.getElementById(prefix + 'CompTranslate' + suffix)?.value || '');
+      const wt = document.getElementById(prefix + 'CompWithType' + suffix);
+      if (wt) {
+        comp.withType = wt.value;
+        if (comp.withType === 'object') {
+          comp.withComponents = withComponents.map(c => ({ ...c }));
+          comp.with = '';
+        } else {
+          comp.with = (document.getElementById(prefix + 'CompWith' + suffix)?.value || '');
+          comp.withComponents = [];
+        }
+      }
+      break;
+    }
+  }
+  const editIndex = parseInt(modal.dataset.editIndex, 10);
+  if (editIndex >= 0) {
+    comps[editIndex] = comp;
+  } else {
+    comps.push(comp);
+  }
+  modal.classList.remove('open');
+  setTimeout(() => modal.remove(), 200);
+  // Re-render parent WITH area
+  const parentPrefix = modal.dataset.parentPrefix || 'add';
+  const parentNesting = parseInt(modal.dataset.parentNesting, 10);
+  const parentSuffix = parentNesting === 0 ? '' : '_' + parentNesting;
+  const parentContainer = document.getElementById(parentPrefix + 'CompFields' + parentSuffix);
+  const translateInput = parentContainer && parentContainer.querySelector('#' + parentPrefix + 'CompTranslate' + parentSuffix);
+  if (translateInput) {
+    const parentTypeInput = document.getElementById(parentPrefix + 'CompWithType' + parentSuffix);
+    const parentComp = { translate: translateInput.value, withType: parentTypeInput ? parentTypeInput.value : 'list' };
+    if (parentComp.withType === 'object') {
+      parentComp.withComponents = comps;
+    }
+    buildFields(parentPrefix, 'translate', parentComp, parentNesting);
+  }
+}
+
+function createWithModal(comps, index, nestingLevel, parentPrefix, typeHint) {
+  setWithComponents(comps);
+  setWithNestingLevel(nestingLevel);
+  const s = '_' + nestingLevel;
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.id = 'withModal_' + nestingLevel;
+  modal.dataset.editIndex = String(index);
+  modal.dataset.parentPrefix = parentPrefix || 'add';
+  modal.dataset.parentNesting = String(nestingLevel - 1);
+
+  const title = index >= 0 ? '编辑WITH中的组件' : '添加WITH中的组件';
+  const confirmText = index >= 0 ? '保存' : '添加';
+  const comp = index >= 0 ? comps[index] : null;
+
+  modal.innerHTML =
+    '<div class="modal">' +
+      '<div class="modal-header">' +
+        '<h2>' + title + '</h2>' +
+        '<button class="modal-close">✕</button>' +
+      '</div>' +
+      '<div class="modal-body">' +
+        '<div class="add-comp-row">' +
+          '<div class="modal-field-label">类型</div>' +
+          '<div class="add-comp-type-group" id="withCompTypeGroup' + s + '">' +
+            '<div class="seg-indicator"></div>' +
+            '<button class="add-comp-type-btn active" data-type="text">text</button>' +
+            '<button class="add-comp-type-btn" data-type="selector">selector</button>' +
+            '<button class="add-comp-type-btn" data-type="score">score</button>' +
+            '<button class="add-comp-type-btn" data-type="translate">translate</button>' +
+          '</div>' +
+        '</div>' +
+        '<div id="withCompFields' + s + '" class="add-comp-fields"></div>' +
+      '</div>' +
+      '<div class="modal-footer">' +
+        '<button class="modal-confirm">' + confirmText + '</button>' +
+      '</div>' +
+    '</div>';
+
+  document.body.appendChild(modal);
+
+  const typeGroup = document.getElementById('withCompTypeGroup' + s);
+  const indicator = typeGroup.querySelector('.seg-indicator');
+
+  function positionIndicator(btn) {
+    indicator.style.width = btn.offsetWidth + 'px';
+    indicator.style.transform = 'translateX(' + (btn.offsetLeft || 0) + 'px)';
+  }
+
+  if (comp) {
+    typeGroup.querySelectorAll('.add-comp-type-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.type === comp.type);
+    });
+  }
+
+  typeGroup.querySelectorAll('.add-comp-type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      typeGroup.querySelectorAll('.add-comp-type-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      buildFields('with', btn.dataset.type, null, nestingLevel);
+      requestAnimationFrame(() => positionIndicator(btn));
+    });
+  });
+
+  buildFields('with', comp ? comp.type : (typeHint || 'text'), comp, nestingLevel);
+  requestAnimationFrame(() => {
+    const active = typeGroup.querySelector('.active');
+    if (active) positionIndicator(active);
+  });
+
+  modal.querySelector('.modal-close').addEventListener('click', () => {
+    modal.classList.remove('open');
+    setTimeout(() => modal.remove(), 200);
+  });
+
+  modal.querySelector('.modal-confirm').addEventListener('click', () => {
+    withModalSaveHandler(modal, comps);
+  });
+
+  requestAnimationFrame(() => modal.classList.add('open'));
 }

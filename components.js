@@ -15,7 +15,11 @@ function getPreviewText(comp) {
       return (comp.scoreName || '?') + ' / ' + (comp.scoreObjective || '?');
     case 'translate':
       const n = comp.with ? comp.with.split(',').filter(s => s.trim()).length : 0;
-      return (comp.translate || '') + (n > 0 ? ' [' + n + ']' : '');
+      const m = comp.withType === 'object' ? (comp.withComponents ? comp.withComponents.length : 0) : 0;
+      const count = comp.withType === 'object' ? m : n;
+      const bracket = comp.withType === 'object' ? '{' : '[';
+      const closeBracket = comp.withType === 'object' ? '}' : ']';
+      return (comp.translate || '') + (count > 0 ? ' ' + bracket + count + closeBracket : '');
     default:
       return '';
   }
