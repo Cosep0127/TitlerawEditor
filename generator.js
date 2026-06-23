@@ -26,7 +26,7 @@ function componentToObj(comp) {
   switch (comp.type) {
     case 'text':
       if (!comp.text) return null;
-      obj.text = comp.text;
+      obj.text = comp.text.replace(/\n/g, '\\n');
       break;
     case 'selector':
       if (!comp.selector) return null;
