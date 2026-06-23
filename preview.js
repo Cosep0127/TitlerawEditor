@@ -38,10 +38,23 @@ export function parseFormattedText(raw) {
         if (color) { styles = styles.filter(s => !s.startsWith('color:')); styles.push('color:' + color.hex); }
         else { buf += '§' + raw[i - 1]; }
       }
+    } else if (raw[i] === '\\' && raw[i + 1] === '\\') {
+      buf += '\\';
+      i += 2;
     } else if (raw[i] === '\\' && raw[i + 1] === 'n') {
       if (buf) { parts.push(span(buf, styles)); buf = ''; }
       parts.push('<br>');
       i += 2;
+    } else if (raw[i] === '\\' && raw[i + 1] === 'u') {
+      const hex = raw.slice(i + 2, i + 6);
+      if (/^[0-9a-f]{4}$/i.test(hex)) {
+        if (buf) { parts.push(span(buf, styles)); buf = ''; }
+        buf += String.fromCharCode(parseInt(hex, 16));
+        i += 6;
+      } else {
+        buf += '\\u';
+        i += 2;
+      }
     } else if (raw[i] === '\n') {
       if (buf) { parts.push(span(buf, styles)); buf = ''; }
       parts.push('<br>');
