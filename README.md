@@ -2,7 +2,7 @@
 
 一个简洁的 `/titleraw` 命令可视化编辑器网页，适用于 Minecraft 基岩版。
 
-> 代码100%由AI生成丨MIT License丨V1.0.2
+> 代码100%由AI生成丨MIT License丨V1.0
 
 ![preview](./img/preview.png)
 
@@ -33,3 +33,7 @@
 ├── ui.js            弹窗、提示、颜色参考卡、添加/编辑组件界面
 └── main.js          入口（DOM 引用、事件绑定、初始化）
 ```
+
+## 参考项目
+
+* [小舟工具箱](https://github.com/lonzov/LonzovTool/) - 部分 UI 布局参考此项目“T显可视化编辑器”功能。

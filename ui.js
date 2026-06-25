@@ -30,7 +30,7 @@ export function updateIndicator(containerId) {
   const indicator = container.querySelector('.seg-indicator');
   const active = container.querySelector('.active');
   if (!indicator || !active) return;
-  indicator.style.width = active.offsetWidth + 'px';
+  indicator.style.width = (active.offsetWidth - 1) + 'px';
   indicator.style.transform = `translateX(${active.offsetLeft}px)`;
 }
 
@@ -134,7 +134,7 @@ export function updateAddCompIndicator() {
   const indicator = group.querySelector('.seg-indicator');
   const active = group.querySelector('.active');
   if (!indicator || !active) return;
-  indicator.style.width = active.offsetWidth + 'px';
+  indicator.style.width = (active.offsetWidth - 1) + 'px';
   indicator.style.transform = `translateX(${active.offsetLeft}px)`;
 }
 
@@ -249,7 +249,7 @@ export function buildFields(prefix, type, comp, nestingLevel) {
       container.appendChild(withHeader);
 
       function positionWithIndicator(btn) {
-        withIndicator.style.width = btn.offsetWidth + 'px';
+        withIndicator.style.width = (btn.offsetWidth - 1) + 'px';
         withIndicator.style.transform = 'translateX(' + btn.offsetLeft + 'px)';
       }
 
@@ -349,18 +349,52 @@ export function buildFields(prefix, type, comp, nestingLevel) {
             const textSpan = document.createElement('span');
             textSpan.className = 'with-comp-text';
             textSpan.textContent = getCompShortPreview(c);
+            const actions = document.createElement('div');
+            actions.className = 'with-comp-actions';
+            const upBtn = document.createElement('button');
+            upBtn.className = 'with-comp-btn';
+            upBtn.textContent = '↑';
+            upBtn.title = '上移';
+            upBtn.disabled = i === 0;
+            upBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              [comps[i - 1], comps[i]] = [comps[i], comps[i - 1]];
+              renderObjectItems();
+            });
+            const downBtn = document.createElement('button');
+            downBtn.className = 'with-comp-btn';
+            downBtn.textContent = '↓';
+            downBtn.title = '下移';
+            downBtn.disabled = i === comps.length - 1;
+            downBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              [comps[i], comps[i + 1]] = [comps[i + 1], comps[i]];
+              renderObjectItems();
+            });
+            const addBtn = document.createElement('button');
+            addBtn.className = 'with-comp-btn';
+            addBtn.textContent = '+';
+            addBtn.title = '在此下方添加组件';
+            addBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              createWithModal(comps, -1, nestingLevel + 1, prefix, 'text', i + 1);
+            });
             const removeBtn = document.createElement('button');
-            removeBtn.type = 'button';
-            removeBtn.className = 'with-param-remove';
+            removeBtn.className = 'with-comp-btn';
             removeBtn.textContent = '✕';
+            removeBtn.title = '删除';
             removeBtn.addEventListener('click', (e) => {
               e.stopPropagation();
               comps.splice(i, 1);
               renderObjectItems();
             });
+            actions.appendChild(upBtn);
+            actions.appendChild(downBtn);
+            actions.appendChild(addBtn);
+            actions.appendChild(removeBtn);
             item.appendChild(typeSpan);
             item.appendChild(textSpan);
-            item.appendChild(removeBtn);
+            item.appendChild(actions);
             item.addEventListener('click', () => {
               createWithModal(comps, i, nestingLevel + 1, prefix, c.type);
             });
@@ -462,8 +496,11 @@ function withModalSaveHandler(modal, comps) {
     }
   }
   const editIndex = parseInt(modal.dataset.editIndex, 10);
+  const insertAfter = modal.dataset.insertAfter;
   if (editIndex >= 0) {
     comps[editIndex] = comp;
+  } else if (insertAfter) {
+    comps.splice(parseInt(insertAfter, 10), 0, comp);
   } else {
     comps.push(comp);
   }
@@ -485,7 +522,7 @@ function withModalSaveHandler(modal, comps) {
   }
 }
 
-function createWithModal(comps, index, nestingLevel, parentPrefix, typeHint) {
+function createWithModal(comps, index, nestingLevel, parentPrefix, typeHint, insertAfter) {
   setWithComponents(comps);
   setWithNestingLevel(nestingLevel);
   const s = '_' + nestingLevel;
@@ -493,6 +530,7 @@ function createWithModal(comps, index, nestingLevel, parentPrefix, typeHint) {
   modal.className = 'modal-overlay';
   modal.id = 'withModal_' + nestingLevel;
   modal.dataset.editIndex = String(index);
+  if (insertAfter != null) modal.dataset.insertAfter = String(insertAfter);
   modal.dataset.parentPrefix = parentPrefix || 'add';
   modal.dataset.parentNesting = String(nestingLevel - 1);
 
@@ -530,7 +568,7 @@ function createWithModal(comps, index, nestingLevel, parentPrefix, typeHint) {
   const indicator = typeGroup.querySelector('.seg-indicator');
 
   function positionIndicator(btn) {
-    indicator.style.width = btn.offsetWidth + 'px';
+    indicator.style.width = (btn.offsetWidth - 1) + 'px';
     indicator.style.transform = 'translateX(' + (btn.offsetLeft || 0) + 'px)';
   }
 
