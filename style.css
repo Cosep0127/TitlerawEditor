@@ -798,12 +798,18 @@ header {
 .component-card {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  background: var(--input-bg);
+  gap: 8px;
+  padding: 8px 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
   margin-bottom: 8px;
-  overflow: hidden;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.component-card:hover {
+  background: var(--hover-bg);
+  border-color: var(--blue);
 }
 
 .component-card:last-child {
@@ -820,28 +826,15 @@ header {
   line-height: 1.6;
 }
 
-.comp-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  flex: 1;
-  cursor: pointer;
-  transition: background 0.12s;
-}
-
-.comp-left:hover {
-  background: var(--hover-bg);
-}
-
 .comp-badge {
   font-family: 'SF Mono', 'Menlo', 'Monaco', 'Consolas', monospace;
   font-size: 11px;
   font-weight: 600;
   color: var(--text-secondary);
   background: var(--surface-alt);
-  padding: 2px 7px;
+  padding: 2px 6px;
   border-radius: 4px;
+  flex-shrink: 0;
 }
 
 .comp-type-label {
@@ -859,14 +852,13 @@ header {
   white-space: nowrap;
   font-size: 13px;
   color: var(--text-secondary);
-  padding: 0 4px;
 }
 
 .comp-right {
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 6px;
+  flex-shrink: 0;
 }
 
 .comp-arrow {

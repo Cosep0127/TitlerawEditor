@@ -79,10 +79,6 @@ function createComponentElement(comp, index) {
   card.dataset.id = comp.id;
   card.dataset.index = index;
 
-  const left = document.createElement('div');
-  left.className = 'comp-left';
-  left.addEventListener('click', () => openEditModal(+card.dataset.index));
-
   const badge = document.createElement('span');
   badge.className = 'comp-badge';
   badge.textContent = `#${index + 1}`;
@@ -91,9 +87,8 @@ function createComponentElement(comp, index) {
   typeLabel.className = 'comp-type-label';
   typeLabel.textContent = comp.type;
 
-  left.appendChild(badge);
-  left.appendChild(typeLabel);
-  card.appendChild(left);
+  card.appendChild(badge);
+  card.appendChild(typeLabel);
 
   const textEl = document.createElement('span');
   textEl.className = 'comp-text';
@@ -139,6 +134,7 @@ function createComponentElement(comp, index) {
   right.appendChild(addHereBtn);
   right.appendChild(delBtn);
   card.appendChild(right);
+  card.addEventListener('click', () => openEditModal(+card.dataset.index));
   return card;
 }
 
