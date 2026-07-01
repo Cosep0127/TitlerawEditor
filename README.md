@@ -2,9 +2,9 @@
 
 一个简洁的 `/titleraw` 命令可视化编辑器网页，适用于 Minecraft 基岩版。
 
-> 代码100%由AI生成丨MIT License丨V1.0
+> 代码100%由AI生成丨MIT License丨V1.1
 
-![preview](./img/preview.png)
+![preview](./img/preview.webp)
 
 ## 功能
 

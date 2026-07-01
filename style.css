@@ -6,7 +6,7 @@
 
 @font-face {
   font-family: 'Unifont';
-  src: url('https://cdn.jsdelivr.net/npm/@fontsource/unifont@5.2.5/files/unifont-latin-400-normal.woff2') format('woff2');
+  src: url('fonts/unifont.woff2') format('woff2');
   font-display: swap;
 }
 
